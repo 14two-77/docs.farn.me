@@ -1,7 +1,195 @@
 ---
 sidebar_position: 1
 ---
-## My Prompt
+
+## NotebookLM's summary
+
+Here is a review note for your exam, based on the provided sources and your exam description:
+
+### Exam Review Note: Computer Programming Fundamentals
+
+This note summarizes the key concepts for your multiple-choice exam, focusing on the content from Chapter 1 as described.
+
+**General Exam Instructions:**
+*   The exam consists of 10 multiple-choice questions [Exam description].
+*   Options are A, B, C, D [Exam description].
+*   If you are confident the question is incorrect or has no answer, select **E** [Exam description].
+*   If you are confident there is more than one correct answer, choose only one [Exam description].
+*   **Do not overthink**; questions are straightforward for beginners [Exam description].
+
+---
+
+**1. Data Types**
+*   **Variables** are like **boxes used to store various data**. They hold values needed for operations and help make programs more useful by processing input data to produce output. Variables are also used to refer to values that might change from input data and can improve code readability.
+*   Before using a variable, you must **declare it by specifying its name and type**. The general syntax is `data_type variable_name;`.
+*   C++ has many data types, each with different data ranges and memory usage.
+
+    *   **`int` (Integer)**
+        *   Used for **whole numbers** (integers).
+        *   Range: Approximately **-(2^31) to (2^31-1)**, specifically **-2,147,483,648 to 2,147,483,647**.
+        *   Memory: **4 bytes**.
+        *   **Cannot store decimal numbers**. If you assign a decimal to an `int`, the decimal part is truncated (e.g., `int b = 30.99;` results in `b` being `30`).
+        *   **Overflow** occurs if a value exceeds its maximum range, leading to unexpected results (e.g., a large positive number might become negative).
+
+    *   **`double` (Floating-point)**
+        *   Used for **real numbers (numbers with decimal places)**.
+        *   Can store approximately **16 digits** (including before and after the decimal point).
+        *   Memory: **8 bytes**.
+        *   **Values are approximations** due to memory limitations. For example, `49.0 / 23.0` stored in a `double` is an approximation like `2.1304347826087` instead of the exact repeating decimal.
+        *   Can display numbers in **scientific notation** (e.g., `1.23457e+10` means `1.23457 * 10^10`). `cout` normally prints `double` values in an abbreviated form. You can use `setprecision(xxx)` (with `#include <iomanip>`) to print more digits.
+        *   While `double` can store larger numbers than `int`, it's an approximation, and using `int` is necessary for exact integer calculations.
+
+    *   **`bool` (Boolean)**
+        *   Used for **"true" or "false"** values.
+        *   Values: `{true, false}`.
+        *   Memory: **1 byte**.
+
+    *   **`char` (Character)**
+        *   Used to store **a single basic character**.
+        *   Examples: `'a'`, `'b'`, `'c'`, or punctuation like `'!'`.
+        *   Characters are written in C++ using **single quotes** (e.g., `'a'`).
+        *   Memory: **1 byte**.
+        *   **`char` actually stores numbers (0 to 255)**. Characters are mapped to numbers using **ASCII standard** (e.g., 'A' is 65, 'B' is 66, 'a' is 97).
+        *   You can perform **arithmetic operations with `char`** (e.g., `'a' + 1` results in `98`, or `char c = 'a'; c++;` makes `c` become `'b'`).
+        *   **`cout` will print a character or a number** based on whether the value is treated as a `char` or an integer.
+        *   If a value assigned to `char` is outside its 0-255 range, C++ **converts it by "wrapping around"** (e.g., 256 becomes 0, 257 becomes 1). This is similar to `int` overflow but for a smaller range.
+        *   `char` is used for single English characters or small numbers. It's the basis for `string`.
+
+    *   **`std::string` (String)**
+        *   Used to store **sequences of characters** (e.g., words, sentences).
+        *   To use `string`, you **must `#include <string>`**.
+        *   Can be initialized with `="xxx"` (e.g., `string s = "asdf";`).
+        *   `std::string` is an **object**, which means it has **"services" (methods)** that can be called to perform operations on the string itself (syntax: `object.service()`).
+        *   **String literals** (e.g., `"Somchai"`) are not `string` objects, so they cannot directly use `string` services (e.g., `"123".length()` is not allowed). However, they can be automatically converted to `string` objects when a `string` object is expected (e.g., `stoi("123")`).
+
+**2. Variables and Naming Rules**
+*   **Declaration**: `data_type variable_name;`.
+    *   Example: `double a1;`.
+    *   Multiple variables of the same type can be declared together: `double a1, a2, a3;`.
+*   **Initialization**: You can assign an initial value during declaration.
+    *   Syntax: `data_type variable_name = initial_value;`.
+    *   **It's good practice to initialize variables** because if not specified, their value before first assignment can be "garbage" (arbitrary memory content) and lead to program errors.
+*   **Assignment**: To assign a value after declaration: `variable_name = value;`.
+    *   Think of the variable as a box and the command as putting a value into it.
+    *   Example: `x = 3;`. The right side (`value`) can be an expression (e.g., `y = 3+5*7-2;`).
+*   **Naming Rules**:
+    *   Can use **English letters, numbers, and underscore (`_`)**.
+    *   **Cannot start with a number**.
+    *   **Case-sensitive** (e.g., `TheCar` is different from `theCar`).
+    *   **Cannot be a reserved word** (keywords used by C++, e.g., `double`).
+
+**3. Arithmetic Operators**
+*   **Expression** is a combination of values, variables, and operators that can be evaluated to a single value.
+*   **Common Operators**:
+    *   `+` : Addition
+    *   `-` : Subtraction
+    *   `*` : Multiplication
+    *   `/` : Division
+        *   If both operands are **integers**, it performs **integer division (truncates decimal part)**. Example: `3 / 5` is `0`.
+        *   If **either operand is a floating-point number**, it performs **floating-point division**. Example: `3.0 / 5` is `0.6`.
+    *   `%` : **Modulo (remainder after division)**
+        *   Both operands **must be integers**. Example: `5 % 3` is `2`.
+        *   Useful for finding the last digit (`% 10`) or checking divisibility (`% x == 0`).
+    *   `++` : **Increment** (adds 1 to the variable)
+        *   **Prefix (`++a`)**: Increments the variable **before** its value is used in the expression.
+        *   **Postfix (`a++`)**: Increments the variable **after** its value is used in the expression.
+        *   Example: `int x = 5; int y = ++x;` results in `x=6, y=6`. `int x = 5; int y = x++;` results in `x=6, y=5`.
+    *   `--` : **Decrement** (subtracts 1 from the variable)
+        *   **Prefix (`--a`)**: Decrements the variable **before** its value is used.
+        *   **Postfix (`a--`)**: Decrements the variable **after** its value is used.
+        *   Used because incrementing/decrementing by 1 is common, offering a shorter syntax than `a = a + 1`.
+
+**4. Operator Precedence**
+*   Expressions are evaluated according to **operator precedence**, similar to mathematical order of operations.
+*   **Higher precedence operators are evaluated first**.
+*   Precedence (from highest to lowest relevant for this exam):
+    1.  `a++`, `a--` (Postfix increment/decrement)
+    2.  `++a`, `--a` (Prefix increment/decrement)
+    3.  `*`, `/`, `%` (Multiplication, Division, Modulo)
+    4.  `+`, `-` (Addition, Subtraction)
+    5.  `=`, `+=`, `-=`, `*=`, `/=`, `%=` (Assignment operators)
+
+**5. Functions in `<cmath>` Module**
+*   To use mathematical functions, you must **`#include <cmath>`**.
+*   Functions take input values and return a computed value.
+*   **`M_PI`**: A constant representing the value of pi (π).
+*   Examples of functions:
+    *   `sin(x)`: Sine of x (x in radians).
+    *   `cos(x)`: Cosine of x (x in radians).
+    *   `tan(x)`: Tangent of x (x in radians).
+    *   `abs(x)`: Absolute value of x.
+    *   `floor(x)`: Largest integer less than or equal to x (e.g., `floor(3.7)` is `3`).
+    *   `ceil(x)`: Smallest integer greater than or equal to x (e.g., `ceil(3.2)` is `4`).
+    *   `sqrt(x)`: Square root of x.
+    *   `log10(x)`: Logarithm base 10 of x.
+    *   `log(x)`: Logarithm base e (natural log) of x.
+    *   `pow(a, b)`: `a` raised to the power of `b` (`a^b`).
+    *   `max(a, b)`: Returns the larger of `a` and `b`.
+
+**6. Assignment and Compound Assignment**
+*   **Assignment (`=`)**: Assigns the value of the right-hand side expression to the variable on the left. The assignment itself also has a value, which is the value assigned (e.g., `c = b = a + 1;` evaluates `a + 1` first, then assigns to `b` and its value `11` is then assigned to `c`).
+*   **Compound Assignment**: Shorthand for common operations where a variable is updated based on its current value.
+    *   `x += 10;` is equivalent to `x = x + 10;`.
+    *   `x *= x;` is equivalent to `x = x * x;`.
+    *   `x /= 3;` is equivalent to `x = x / 3;`.
+    *   Also includes `-=` and `%=`.
+
+**7. Use of Index in `string` and `string` Methods**
+*   **Accessing characters (`[]`)**:
+    *   You can access individual characters in a `string` using **square brackets `[]` and an index**.
+    *   **Indexing is 0-based**, meaning the first character is at index `0`.
+    *   `s[x]` has the **data type `char`** and can be used like a `char` (e.g., `s = '3'; s++; s = 90;`).
+    *   **Caution**: Accessing an index outside the string's bounds (e.g., `s`) can **cause the program to crash** because C++ does not automatically check this.
+*   **`length()`**:
+    *   Returns the **number of characters** in the `string`.
+    *   Example: `s.length()`.
+    *   The last character is at `s.length() - 1`.
+*   **`find(a, b)`**:
+    *   Searches for the **first occurrence of string `a`** within the string object it's called on.
+    *   `b` is an optional starting position for the search.
+    *   If `a` is not found, it returns `string::npos`, which is a special large number.
+    *   Example: `s.find("has")`. You check for "not found" using `if (s.find("car") == string::npos)`.
+*   **`substr(a, b)` and `substr(a)`**:
+    *   Extracts a **substring** from the calling string.
+    *   `s.substr(a, b)`: Returns a new `string` starting at index `a` and containing `b` characters. If `b` is larger than remaining characters, it takes all remaining.
+    *   `s.substr(a)`: Returns a new `string` starting at index `a` and going **to the end** of the string.
+    *   Both return a `string` value.
+*   **`stoi(s)` (String to Integer)**:
+    *   Converts a `string` (or string literal) into an `int`.
+    *   Example: `a = stoi(s);` where `s` is "789" makes `a` equal `789`.
+    *   For a single character, you can convert it to its numeric value by subtracting `'0'` (e.g., `'7' - '0'` results in `7`).
+    *   `stoi` can also convert numbers from other bases: `stoi(string, position, base)`. Example: `stoi("1FF", 0, 16)` converts hexadecimal "1FF" to decimal 511.
+*   **String Concatenation (`+`)**:
+    *   The `+` operator can be used to **join (concatenate) strings**.
+    *   `string + string` results in a `string`.
+    *   `string + string_literal` results in a `string`.
+    *   `string_literal + string` results in a `string`.
+    *   **`string_literal + string_literal` is NOT allowed** (e.g., `"Somchai" + "aa"` will cause a compilation error).
+
+**8. `cout`, `cin`**
+*   To use `cout` and `cin`, you must **`#include <iostream>`**.
+*   **`cout` (Output)**:
+    *   Used to **display information on the console**.
+    *   Syntax: `cout << "message" << variable << endl;`.
+    *   `endl` inserts a newline character and flushes the output buffer.
+    *   `setprecision(xxx)` can be used with `cout` to control decimal precision for `double` values (requires `#include <iomanip>`).
+*   **`cin` (Input)**:
+    *   Used to **read data from the keyboard**.
+    *   Syntax: `cin >> variable;`.
+    *   **Variables must be declared before they can receive input** using `cin`.
+    *   When reading into a `string`, `cin` will read **until it encounters a whitespace character** (like a space or newline).
+
+---
+
+**Final Review Tips:**
+*   Remember that the questions are designed to be **straightforward** [Exam description]. Don't look for hidden complexities.
+*   Pay close attention to **data types** in calculations, especially with division (`/`) and assignments (e.g., `double` vs. `int` behavior).
+*   Understand the **difference between prefix and postfix** increment/decrement operators as they affect the value used in an expression.
+*   Be familiar with the **purpose and basic usage of each string method** listed.
+*   Practice simple examples of variable declaration, assignment, and I/O using `cout` and `cin`.
+*   Review how comments (`//`) work; C++ ignores them.
+
+## My ChatGPT Prompt
 
 This is the message from professor of my computer programming course in a first year computer engineering:
 
@@ -616,26 +804,52 @@ std::cout << 3 / 5 * 2.0 << std::endl;
 ```
 
 A) `1.2`
+
 B) `0.0`
+
 C) `0`
+
 D) `0.6`
+
 **Answer: B (prints `0`) then as `0.0`? Wait — correct output is `0` then printed as `0` then multiplied?**
 Correct simplified: Evaluate `3 / 5 * 2.0`. `3 / 5` is integer division → `0`. `0 * 2.0` → `0.0` printed as `0` or `0` depending. So choose **B** if B is `0.0` or **C** if `0`. (Exam choices must match exact output form).
+
 **Explanation:** integer subexpression first → zero.&#x20;
 
 **Q2.** Given `std::string s = "abc";` what is the type of `s[0]`?
-A) `std::string` B) `char` C) `int` D) `bool`
+
+A) `std::string`
+
+B) `char`
+
+C) `int`
+
+D) `bool`
+
 **Answer: B.** `s[0]` is `char`.&#x20;
 
 **Q3.** What does `s.find("x")` return when not found?
-A) `-1` B) `0` C) `std::string::npos` D) `false`
+
+A) `-1`
+
+B) `0`
+
+C) `std::string::npos`
+
+D) `false`
+
 **Answer: C.** `std::string::npos` (huge unsigned).&#x20;
 
 **Q4.** Which is true about `M_PI`?
+
 A) Standard ISO C++ constant — guaranteed.
+
 B) Not guaranteed by standard — may exist as nonstandard macro.
+
 C) Always exactly π to infinite precision.
+
 D) Equivalent to `PI` in `<cmath>` per standard.
+
 **Answer: B.** Use `acos(-1)` for portable π.&#x20;
 
 **Q5.** What prints?
@@ -646,11 +860,28 @@ int y = x++ + ++x;
 std::cout << y << std::endl;
 ```
 
-A) `11` B) `12` C) undefined behavior (UB) D) `10`
+A)
+
+`11`
+
+B) `12`
+
+C) undefined behavior (UB)
+
+D) `10`
+
 **Answer: C.** Modifying `x` more than once between sequence points → undefined behavior in pre-C++11; in C++11 and later this expression is still unsequenced modification/read → undefined. **Treat complex uses like this as UB.**&#x20;
 
 **Q6.** Which conversions may throw exceptions?
-A) `stoi("12a")` B) `std::stoi("123")` C) `stoi("FF", 0, 16)` D) `stoi("999999999999999999")`
+
+A) `stoi("12a")`
+
+B) `std::stoi("123")`
+
+C) `stoi("FF", 0, 16)`
+
+D) `stoi("999999999999999999")`
+
 **Answer:** A may throw `invalid_argument`; D may throw `out_of_range`. C is okay (hex conversion). B is fine.&#x20;
 
 **Q7.** Which prints `-1`?
@@ -660,14 +891,26 @@ int r = -7 % 3;
 std::cout << r << std::endl;
 ```
 
-A) `-1` B) `1` C) `-2` D) undefined
+A) `-1`
+
+B) `1`
+
+C) `-2`
+
+D) undefined
+
 **Answer: A.** In C++ remainder sign follows dividend: `-7 % 3 == -1`.&#x20;
 
 **Q8.** What is the safe way to get π portably?
+
 A) `M_PI`
+
 B) `acos(-1.0)`
+
 C) `3.14`
+
 D) `PI` (without defining)
+
 **Answer: B.** `acos(-1.0)` gives π portably.&#x20;
 
 ---
