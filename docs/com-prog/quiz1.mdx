@@ -1,0 +1,685 @@
+---
+sidebar_position: 1
+---
+## My Prompt
+
+This is the message from professor of my computer programming course in a first year computer engineering:
+
+:::info
+
+ข้อสอบปรนัย 10 ข้อ เนื้อหาของบทที่ 1
+- data types: int, double, bool, char, string
+- variables and naming rules
+- arithmetic operators : +, -, *, /, %, ++, --
+- operator precedence
+- functions in cmath module: sin, log, pow, sqrt
+- assignment and compound assignment
+- use of index in string  and string methods: [ ], find, substr, stoi
+- cout, cin
+- ตัวเลือก A, B, C, D
+  - ถ้ามั่นใจว่าโจทย์ผิดหรือไม่มีคำตอบ ให้ตอบ E
+  - ถ้ามั่นใจว่ามีคำตอบที่ถูกต้องมากกว่า 1 คำตอบ ให้เลือกตอบหนึ่งข้อ
+  - อย่าคิดลึก โจทย์ถามแบบตรงไปตรงมา สำหรับผู้เริ่มเริ่มเขียนโปรแกรม
+
+:::
+
+Can you give me full material of things that may be in the exam, so I can use it to review my knowledge?
+
+---
+
+## ChatGPT Answer
+Great — I turned your professor’s syllabus into a compact, exam-ready study pack (C++-focused since you mentioned `cmath`, `cout`, `cin`). Below you’ll find concise explanations, short-coded examples you should understand, a one-page precedence cheat-sheet, common pitfalls, and 15 multiple-choice practice questions with answers + brief explanations. Use this to review and practice — no fluff.
+
+# Exam rules (from your professor)
+
+* 10 multiple-choice questions (A, B, C, D).
+* If you are sure the question has no correct answer → choose **E**.
+* If more than one choice is correct, still choose **one**.
+* Questions are straightforward for beginners; don’t overthink.
+
+---
+
+# 1) Data types (quick summary)
+
+* `int` — integer numbers (e.g., `-3, 0, 42`). Integer division truncates toward zero.
+* `double` — floating point numbers (e.g., `3.14`, `2.0`).
+* `bool` — `true` or `false`.
+* `char` — single character in single quotes, e.g. `'a'`, `'0'`. Stored as integer code.
+* `std::string` — sequence of characters, e.g. `"hello"`.
+
+Examples:
+
+```cpp
+int a = 10;
+double b = 3.5;
+bool flag = true;
+char c = 'x';
+std::string s = "Hello";
+```
+
+---
+
+# 2) Variables & naming rules
+
+* Names may contain letters (`a–z`, `A–Z`), digits (`0–9`), and underscore `_`.
+* **Cannot** start with a digit. e.g., `int 1st` is invalid.
+* **Case-sensitive**: `count` ≠ `Count`.
+* Not allowed: C++ keywords (`int`, `return`, `for`, etc.).
+* Good styles: `snake_case`, `camelCase`. Keep names meaningful.
+
+---
+
+# 3) Arithmetic operators
+
+* `+` add, `-` subtract, `*` multiply, `/` divide, `%` modulo (remainder).
+* `++` increment (prefix `++x` vs postfix `x++`).
+* `--` decrement.
+
+Important: integer `/` with `int`s does integer division (truncates). Use `double` to get floating result.
+
+Examples:
+
+```cpp
+int x = 7 / 2;      // x == 3
+double y = 7.0 / 2; // y == 3.5
+
+int r = 7 % 3;      // r == 1
+```
+
+Prefix vs postfix:
+
+```cpp
+int i = 5;
+int a = ++i; // i becomes 6, a == 6
+int j = 5;
+int b = j++; // b == 5, j becomes 6
+```
+
+---
+
+# 4) Operator precedence (important ones for chapter)
+
+From highest to lower (relevant subset):
+
+1. Parentheses `(...)`
+2. Unary `+`, `-`, prefix `++`, prefix `--`
+3. Multiplicative `*`, `/`, `%`
+4. Additive `+`, `-`
+5. Assignment `=`, and compound assignments (evaluated last)
+
+Example:
+`3 + 4 * 2` → `3 + (4*2) = 11` (multiplication before addition)
+`(3 + 4) * 2` → `14` (parentheses change order)
+
+---
+
+# 5) `cmath` functions (common ones)
+
+* `#include <cmath>`
+* `sin(x)` — sine of `x` **in radians**.
+* `log(x)` — natural logarithm (ln).
+* `pow(x, y)` — `x` raised to `y` (returns double).
+* `sqrt(x)` — square root (double).
+
+Examples:
+
+```cpp
+#include <cmath>
+double a = sin(3.1415926535/2); // ≈ 1
+double b = log(2.718281828);   // ≈ 1
+double c = pow(2, 3);          // 8
+double d = sqrt(16);           // 4
+```
+
+Tip: `sin(90)` is NOT 1 (90 is degrees); you must convert degrees → radians: `rad = deg * M_PI/180`.
+
+---
+
+# 6) Assignment & compound assignment
+
+* `=` simple assignment.
+* `+=`, `-=`, `*=`, `/=`, `%=` modify in-place.
+
+Example:
+
+```cpp
+int x = 5;
+x += 3; // x == 8  (same as x = x + 3)
+x *= 2; // x == 16
+```
+
+Caveat with `/=` and `%=`: types matter. `int a = 7; a /= 2;` → `a == 3`.
+
+---
+
+# 7) Strings: indexing and common methods
+
+* `s[i]` — access character at index `i` (0-based). Type is `char`.
+* `s.find(sub)` — returns `size_t` index of first occurrence or `std::string::npos` if not found.
+* `s.substr(pos, len)` — substring starting at `pos` with length `len`. `len` optional; if omitted, to end.
+* `stoi(s)` — convert string to `int` (from `<string>` or `<cstdlib>`). Throws `std::invalid_argument` if not a number.
+
+Examples:
+
+```cpp
+std::string s = "hello";
+char c = s[1];          // 'e'
+size_t p = s.find("ll"); // p == 2
+std::string t = s.substr(1, 3); // "ell"
+int n = std::stoi("123"); // 123
+```
+
+Check `find`:
+
+```cpp
+if (s.find("x") == std::string::npos) { /* not found */ }
+```
+
+Note: `s[i]` does not do bounds check (use `s.at(i)` if you want exception on out-of-range).
+
+---
+
+# 8) `cout` & `cin` basics
+
+* `std::cout << value;`
+* `std::cin >> var;` reads token (stops at whitespace).
+* `std::getline(std::cin, line);` to read a full line (including spaces).
+* Use `std::endl` or `'\n'` for newline.
+
+Example:
+
+```cpp
+#include <iostream>
+#include <string>
+int main() {
+  int x; std::cin >> x;          // reads one integer token
+  std::string line;
+  std::getline(std::cin, line);  // reads remainder of line (watch newline)
+  std::cout << "You typed: " << x << '\n';
+}
+```
+
+Pitfall: after `cin >> x;` the newline remains; `getline` afterwards may read an empty string — consume newline with `std::getline` or `cin.ignore()`.
+
+---
+
+# Common pitfalls / exam traps
+
+* Integer vs floating division: `7/2` vs `7.0/2`.
+* `%` works only with integers.
+* `pow(2,3)` returns `8.0` as `double`.
+* `sin` expects radians.
+* `s.find` returns `std::string::npos` (not `-1`), though `npos` is typically the maximum `size_t` value.
+* `++i` vs `i++` difference in returned value.
+* `s[0]` is `char`, not `string`.
+* `stoi("12a")` throws exception (partially convertible? implementation throws invalid\_argument).
+* Variable names cannot start with digits and are case-sensitive.
+
+---
+
+# Quick cheat sheet (one-page)
+
+* Indexing: `s[0]` first char
+* Find: `pos = s.find("sub"); if (pos == std::string::npos) ...`
+* Substr: `s.substr(pos, len)` or `s.substr(pos)`
+* Convert: `int n = std::stoi(s);`
+* Increment: `++x` (prefix), `x++` (postfix)
+* Mod: `a % b` (integers)
+* Casting: `double(a)/b` to force floating division
+* cmath: `sin`, `log` (natural), `pow(x,y)`, `sqrt`
+
+---
+
+# Practice multiple-choice questions (15)
+
+Answers are given after each question (look, then check). Study the explanation if unsure.
+
+**Q1.** What is printed by:
+
+```cpp
+int a = 7;
+int b = 2;
+std::cout << a / b;
+```
+
+A) `3.5`
+
+B) `3`
+
+C) `4`
+
+D) `2`
+
+**Answer: B.** Integer division truncates → `3`.
+
+---
+
+**Q2.** What is printed?
+
+```cpp
+int i = 1;
+std::cout << i++ << " " << ++i;
+```
+
+A) `1 2`
+
+B) `1 3`
+
+C) `2 3`
+
+D) `2 2`
+
+**Answer: B.** Left `i++` prints 1 then `i` becomes 2; `++i` makes it 3 and prints 3 → `1 3`.
+
+---
+
+**Q3.** Which of the following is a valid variable name?
+
+A) `2count`
+
+B) `_value`
+
+C) `int`
+
+D) `total-score`
+
+**Answer: B.** `_value` valid. `2count` starts with digit; `int` is keyword; `total-score` has `-` (minus).
+
+---
+
+**Q4.** What is result of `pow(2, 3)` (type and value)?
+
+A) `8` (int)
+
+B) `8.0` (double)
+
+C) `6` (int)
+
+D) `Error`
+
+**Answer: B.** `pow` returns a `double` typically `8.0`.
+
+---
+
+**Q5.** Given `std::string s = "abc";`, what is type of `s[0]`?
+
+A) `std::string`
+
+B) `char`
+
+C) `int`
+
+D) `bool`
+
+**Answer: B.** `s[0]` is `char` `'a'`.
+
+---
+
+**Q6.** What does `s.find("x")` return if `"x"` not found?
+
+A) `-1` (int)
+
+B) `std::string::npos`
+
+C) `0`
+
+D) `false`
+
+**Answer: B.** `std::string::npos`.
+
+---
+
+**Q7.** What is value of `x` after:
+
+```cpp
+int x = 5;
+x += 3 * 2;
+```
+
+A) `11`
+
+B) `16`
+
+C) `10`
+
+D) `8`
+
+**Answer: A.** Multiplication before addition: `3*2=6`, `x+=6` → `11`.
+
+---
+
+**Q8.** Evaluate:
+
+```cpp
+double r = sqrt(9) + log(exp(1));
+```
+
+Assuming `exp(1)` is `e`.
+
+A) `3 + 1 = 4`
+
+B) `3 + ln(e) = 3 + 1 = 4`
+
+C) `3 + 0 = 3`
+
+D) `Error`
+
+**Answer: B.** `sqrt(9)=3`, `log(e)=1`.
+
+---
+
+**Q9.** Which reads a full line including spaces into `line`?
+
+A) `std::cin >> line;`
+
+B) `std::getline(std::cin, line);`
+
+C) `std::cout << line;`
+
+D) `std::cin.getline(line);`
+
+**Answer: B.** `getline` reads whole line into `std::string`.
+
+(Option D could be C-style `cin.getline(char*, size)` but as shown D is ambiguous — prefer B.)
+
+---
+
+**Q10.** What prints?
+
+```cpp
+std::string s = "123";
+int n = std::stoi(s);
+std::cout << n + 1;
+```
+
+A) `124`
+
+B) `1231`
+
+C) `Error`
+
+D) `12`
+
+**Answer: A.** `stoi("123")` → 123 → plus 1 = 124.
+
+---
+
+**Q11.** What is printed?
+
+```cpp
+std::string s = "hello";
+std::cout << s.substr(1, 2);
+```
+
+A) `he`
+
+B) `el`
+
+C) `ell`
+
+D) `lo`
+
+**Answer: B.** `substr(1,2)` starts at index 1 for 2 chars → `"el"`.
+
+---
+
+**Q12.** Evaluate:
+
+```cpp
+int a = -7 % 3;
+```
+
+A) `-1`
+
+B) `1`
+
+C) `-2`
+
+D) `2`
+
+**Answer: A.** In C++ sign of remainder follows dividend → `-7 % 3 == -1` (implementation-defined historically but modern C++ defines it so that `(a/b)*b + a%b == a`).
+
+---
+
+**Q13.** Which of the following is true about `sin`?
+
+A) `sin(90)` returns 1.0 (in default C++).
+
+B) `sin` expects radians, so `sin(M_PI/2) ≈ 1`.
+
+C) `sin` returns degrees when input > 360.
+
+D) `sin` only accepts integer arguments.
+
+**Answer: B.** `sin` uses radians.
+
+---
+
+**Q14.** What does this print?
+
+```cpp
+int x = 10; 
+int y = x / 4 * 4;
+std::cout << y;
+```
+
+A) `8`
+
+B) `10`
+
+C) `12`
+
+D) `0`
+
+**Answer: A.** `x/4` integer division `10/4 = 2` then `2*4 = 8`.
+
+---
+
+**Q15.** If a question in the exam has **no correct answer**, you should choose:
+
+A) A
+
+B) B
+
+C) D
+
+D) E
+
+**Answer: D (E).** The professor instructed to answer **E** if none are correct.
+
+---
+
+# Short self-test checklist (before the exam)
+
+* Can you tell the difference `int` vs `double` in division? (Yes/No)
+* Know prefix vs postfix `++` behavior? (Yes/No)
+* Can you convert `"45"` → `int` using `stoi` and handle errors? (Yes/No)
+* Know `s.find(...) == std::string::npos` check? (Yes/No)
+* Remember `sin` uses radians? (Yes/No)
+* Know `cin >>` vs `getline`? (Yes/No)
+
+---
+
+If you want, I can:
+
+* Generate another set of 10 practice MCQs that look exactly like the exam (I’ll include tricky but straightforward beginner-level choices), or
+* Convert this into a one-page printable cheat sheet (PDF), or
+* Make short code snippets you can paste and run to test each concept.
+
+Which of those helps you most next?
+
+---
+
+## GPT Ans after I drop him the 01-variable slide
+
+Good — I read your professor’s slides and updated your study pack with corrections, clarifications, and a few extra exam-style practice questions based on what the slides actually teach. (I used your uploaded slides for this — source: the slides you gave me. )
+
+Below: concise, corrected notes (only the relevant updates), then an updated quick cheat sheet and 8 focused practice MCQs (with answers and short explanations). I kept things beginner-friendly and exam-focused.
+
+# What I corrected / added after analyzing the slides
+
+* **`char` range and signedness:** the slides simplify char as `0..255`. In practice `char` can be **signed or unsigned depending on the compiler/ABI**. That means a `char` may range `-128..127` (signed) or `0..255` (unsigned). Use `signed char` or `unsigned char` explicitly when you need a guaranteed signedness.&#x20;
+* **`M_PI` and π:** the slides use `M_PI`. That macro exists on many systems but **is not guaranteed by the C++ standard**. Better portable ways: `const double PI = acos(-1.0);` or define `#define _USE_MATH_DEFINES` on MSVC before including `<cmath>` if needed.&#x20;
+* **`std::string::find` return value:** when `find` fails it returns `std::string::npos`, which is a large unsigned value (not `-1` as a signed int). Always compare with `== std::string::npos`. The slides show the big number output; that's normal.&#x20;
+* **`stoi` signature & exceptions:** `stoi` has signature like `int stoi(const string& str, size_t *pos = 0, int base = 10)`. It **throws `std::invalid_argument`** if no conversion can be made, or **`std::out_of_range`** if the converted value would fall out of `int` range. The slides show base conversion usage (e.g., hex, binary) — that's correct; be ready for exceptions on bad input.&#x20;
+* **Floating formatting:** `cout` may print doubles in scientific notation by default (slides show `1.23457e+10`). Use `<iomanip>` and `std::setprecision(n)` (and optionally `std::fixed`) to control output formatting.&#x20;
+* **Modulo with negative numbers:** modern C++ defines `a%b` so that `(a/b)*b + a%b == a` (remainder has the same sign as the dividend). The slide’s `-7 % 3 == -1` is consistent with C++ rules. Be familiar with this.&#x20;
+* **`sin` uses radians and floating precision:** slides demonstrate `sin(3.14)` vs `sin(M_PI)` — `sin(M_PI)` is not exactly zero because `M_PI` is an approximation and double precision causes tiny nonzero results. Know that `sin` expects radians.&#x20;
+* **`cin` vs `getline`:** slides note `cin` stops at whitespace. Also remember after `cin >> x;` the newline remains; use `cin.ignore()` before `getline` to avoid getting an empty line.&#x20;
+
+---
+
+# Updated mini-study-pack (condensed & exam-focused)
+
+## Data types (exact bits & notes)
+
+* `int` — typical 32-bit signed: range `-2,147,483,648 .. 2,147,483,647`. (If you use very large numbers you can overflow.)&#x20;
+* `double` — 64-bit IEEE floating point; \~15–17 decimal digits of precision; prints in scientific notation by default for large/small values. Use `setprecision` and `fixed` to control.&#x20;
+* `bool` — `true` or `false`.
+* `char` — 1 byte; **signedness is implementation-defined** (`signed char` or `unsigned char` for guaranteed). Holds character via ASCII (or underlying code).&#x20;
+* `std::string` — object type with methods (`length()`, `find()`, `substr()` etc.). `s[i]` returns a `char` and is 0-based.&#x20;
+
+## Variables & naming
+
+* Letters, digits, underscore; cannot start with digit; case-sensitive; cannot be keyword. Examples: `sum`, `_value`, `a1` are OK; `1st`, `int`, `total-score` are not.&#x20;
+
+## Arithmetic operators & precedence (exam-relevant subset)
+
+Precedence-high → low (relevant):
+
+1. Postfix `()` (function call), postfix `x++`, `x--`
+2. Prefix `++x`, `--x`, unary `+`, unary `-`
+3. `*`, `/`, `%`
+4. `+`, `-`
+5. Assignment `=`, compound `+=`, `-=`, `*=`, `/=`, `%=` (evaluated last)
+   (Parentheses `()` override to force order.)&#x20;
+
+## `cmath` functions (what to expect)
+
+* `sin(x)`, `cos(x)` — x in **radians**.
+* `log(x)` — natural log (ln).
+* `log10(x)` — base-10 log.
+* `sqrt(x)`, `pow(a,b)`.
+  Note: `pow` returns `double`. For integer exponentiation where result fits in int, still `pow` gives double; you might cast if needed. `M_PI` macro may not be portable; use `acos(-1)` for π.&#x20;
+
+## Assignment & compound assignment
+
+* `x = expr;` returns the assigned value (so `a = b = 3;` sets both).
+* `x += y;` same as `x = x + y;`. Watch types: `int /= int` uses integer division.
+
+## `cin`, `cout`, `getline`
+
+* `cin >> var;` reads next token up to whitespace.
+* `getline(cin, s);` reads whole line including spaces. After a `cin >>` you often need `cin.ignore()` to discard leftover newline before `getline`.&#x20;
+
+## `std::string` methods you'll be tested on
+
+* Index: `s[i]` (`char`), 0-based. No automatic bounds check.&#x20;
+* `s.find(sub, pos)` — returns index or `std::string::npos` if not found (compare to `== std::string::npos`).&#x20;
+* `s.substr(pos, len)` or `s.substr(pos)` — returns substrings.&#x20;
+* `stoi(s, &idx, base)` — convert string to int; second arg optional pointer to index; third arg is base. Throws on bad input or out-of-range.&#x20;
+
+## Important pitfalls & exam traps (quick list)
+
+* `7 / 2` → `3` (integer division). Use `7.0 / 2` for `3.5`.&#x20;
+* `%` only for integers. `3.77 % 2.15` is invalid.&#x20;
+* `s.find("x")` not found → `std::string::npos` (huge unsigned). Don’t compare to `-1`.&#x20;
+* `sin(90)` ≠ 1 — radians vs degrees.&#x20;
+* `pow(2, 3)` returns `8.0` (double).&#x20;
+* `M_PI` may be present on your system but **is not guaranteed** by ISO C++ standard. Use `acos(-1)` for portability.&#x20;
+* `char` arithmetic uses underlying integer codes (ASCII-like). `c + 1` may produce integer; printing behavior depends on whether you print as `char` or `int`.&#x20;
+
+---
+
+# Updated quick cheat-sheet (one page)
+
+* Index: `s[0]` (first char).
+* Find: `pos = s.find("sub"); if (pos == std::string::npos) ...`
+* Substr: `s.substr(pos, len)` or `s.substr(pos)`
+* Convert: `int n = stoi(s);` or `stoi(s, &idx, base)` (handles hex `base=16`). Handle exceptions.&#x20;
+* Increment: `++x` vs `x++`.
+* Mod: `a % b` integers only.
+* Force floating: `double(a) / b` or `3.0 / 5`.
+* cmath: `sin(rad)`, `log` (natural), `log10`, `pow`, `sqrt`. Use `acos(-1)` for π if you want portable π.&#x20;
+
+---
+
+# 8 updated practice MCQs (exam-style, short)
+
+Answers below each question.
+
+**Q1.** What prints?
+
+```cpp
+int a = 3;
+std::cout << 3 / 5 * 2.0 << std::endl;
+```
+
+A) `1.2`
+B) `0.0`
+C) `0`
+D) `0.6`
+**Answer: B (prints `0`) then as `0.0`? Wait — correct output is `0` then printed as `0` then multiplied?**
+Correct simplified: Evaluate `3 / 5 * 2.0`. `3 / 5` is integer division → `0`. `0 * 2.0` → `0.0` printed as `0` or `0` depending. So choose **B** if B is `0.0` or **C** if `0`. (Exam choices must match exact output form).
+**Explanation:** integer subexpression first → zero.&#x20;
+
+**Q2.** Given `std::string s = "abc";` what is the type of `s[0]`?
+A) `std::string` B) `char` C) `int` D) `bool`
+**Answer: B.** `s[0]` is `char`.&#x20;
+
+**Q3.** What does `s.find("x")` return when not found?
+A) `-1` B) `0` C) `std::string::npos` D) `false`
+**Answer: C.** `std::string::npos` (huge unsigned).&#x20;
+
+**Q4.** Which is true about `M_PI`?
+A) Standard ISO C++ constant — guaranteed.
+B) Not guaranteed by standard — may exist as nonstandard macro.
+C) Always exactly π to infinite precision.
+D) Equivalent to `PI` in `<cmath>` per standard.
+**Answer: B.** Use `acos(-1)` for portable π.&#x20;
+
+**Q5.** What prints?
+
+```cpp
+int x = 5;
+int y = x++ + ++x;
+std::cout << y << std::endl;
+```
+
+A) `11` B) `12` C) undefined behavior (UB) D) `10`
+**Answer: C.** Modifying `x` more than once between sequence points → undefined behavior in pre-C++11; in C++11 and later this expression is still unsequenced modification/read → undefined. **Treat complex uses like this as UB.**&#x20;
+
+**Q6.** Which conversions may throw exceptions?
+A) `stoi("12a")` B) `std::stoi("123")` C) `stoi("FF", 0, 16)` D) `stoi("999999999999999999")`
+**Answer:** A may throw `invalid_argument`; D may throw `out_of_range`. C is okay (hex conversion). B is fine.&#x20;
+
+**Q7.** Which prints `-1`?
+
+```cpp
+int r = -7 % 3;
+std::cout << r << std::endl;
+```
+
+A) `-1` B) `1` C) `-2` D) undefined
+**Answer: A.** In C++ remainder sign follows dividend: `-7 % 3 == -1`.&#x20;
+
+**Q8.** What is the safe way to get π portably?
+A) `M_PI`
+B) `acos(-1.0)`
+C) `3.14`
+D) `PI` (without defining)
+**Answer: B.** `acos(-1.0)` gives π portably.&#x20;
+
+---
+
+# Final notes & what I can do next
+
+* I updated your study pack to reflect the slide details and fixed the few points where the slides simplified or used compiler-dependent behavior (char signedness, `M_PI`, `stoi` exceptions, `find` value).&#x20;
+* If you want, I can:
+
+  * Turn this into a **one-page printable PDF** (study sheet), or
+  * Generate *10 exam-like multiple-choice questions* in the exact style of your professor (straightforward beginner-level, plus an “E = none of the above” option), or
+  * Make short runnable C++ snippets that demonstrate each pitfall (so you can run them and see outputs).
+
+Tell me which of those you want and I’ll produce it right away (I already used the slides to update things).
+
