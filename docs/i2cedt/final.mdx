@@ -1,0 +1,594 @@
+---
+sidebar_position: 1
+---
+
+:::note
+
+- มีข้อสอบจำลองที่ส่วนท้ายของคำตอบจาก ChatGPT ทั้งสองเวอร์ชั่น
+- แต่ละคำตอบของ AI (NotebookLM's summary, ChatGPT Answer, GPT Ans after I drop him the 01-variable slide) ถ้าแค่อ่านเพื่อทวน keywords อาจจะใช้เวลาประมาณ 5-10m ต่อคำตอบ AI
+- สงสัยเหมือนกันเขาจะถามยังไงเลยไปลองถามมา โปรดใช้วิจารณญาณในการเสพ เอาจริงอ่านสไลด์จารย์เลยก็ได้ถ้าไม่ดูข้อสอบจำลอง 5555555555
+  :::
+
+## 1. Data Representation
+
+### 1.1 Bits, Bytes, and Words
+
+- **Bit (binary digit)**: the smallest unit of information in computing. Value = `0` (low voltage) or `1` (high voltage).
+- **Byte**: 8 bits. Standard unit for memory/storage.
+- **Word**: number of bits processed by CPU in one operation. Depends on architecture:
+
+  - 32-bit CPU → word = 32 bits (4 bytes).
+  - 64-bit CPU → word = 64 bits (8 bytes).
+
+⚡ **Why it matters**: Word size influences memory addressing range (e.g., 32-bit CPU maxes at \~4GB RAM).
+
+---
+
+### 1.2 Character Encoding
+
+- Early computers stored text using **ASCII** (American Standard Code for Information Interchange).
+
+  - Uses 7 bits (values 0–127).
+  - Covers English letters, digits, punctuation, control characters.
+  - Example: `'A' = 65 (0100 0001)`.
+
+- Problem: ASCII cannot represent global languages (Thai, Chinese, emojis).
+
+- Solution: **Unicode** standard.
+
+  - **UTF-8 encoding**: variable length (1–4 bytes). Backward compatible with ASCII.
+  - Example: Thai `'ก'` → UTF-8 = `E0 B8 81` (3 bytes).
+
+⚡ **Exam angle**: You may be asked how many bytes are needed for a text string, or to decode hex bytes into characters.
+
+---
+
+### 1.3 Number Systems
+
+- **Decimal (base-10)**: everyday numbers.
+- **Binary (base-2)**: used by hardware.
+- **Hexadecimal (base-16)**: shorthand for binary.
+
+  - 4 bits → 1 hex digit.
+  - Example: `1101 1110` = `DE` hex.
+
+**Conversions**:
+
+- Decimal → Binary: divide by 2 repeatedly.
+- Binary → Decimal: sum powers of 2.
+- Decimal → Hex: divide by 16.
+- Binary ↔ Hex: group bits in 4s.
+
+---
+
+### 1.4 Signed Numbers
+
+- **Unsigned N-bit integer**: 0 to (2^N − 1).
+
+  - Example: 8-bit unsigned range = 0 to 255.
+
+- **Two’s complement (signed)**:
+
+  - Range: −2^(N−1) to (2^(N−1) − 1).
+  - Negation = invert bits + 1.
+  - Example: `0000 0101` (5) → invert = `1111 1010` → add 1 = `1111 1011` (−5).
+
+- **Excess-K (biased)**: store = actual + bias.
+
+  - Example: bias = 127. Store 130 → actual = 3.
+
+⚡ **Exam tip**: They love asking ranges. Always memorize two’s complement rule.
+
+---
+
+### 1.5 Floating Point
+
+- IEEE-754 format: `sign | exponent | mantissa`.
+
+- **Single precision (32-bit)**:
+
+  - Sign: 1 bit.
+  - Exponent: 8 bits (bias 127).
+  - Mantissa: 23 bits (with hidden leading 1).
+
+- **Double precision (64-bit)**:
+
+  - Sign: 1 bit.
+  - Exponent: 11 bits (bias 1023).
+  - Mantissa: 52 bits.
+
+⚡ **Possible trick question**: difference between precision and range.
+
+- Precision = number of significant digits.
+- Range = min and max magnitude representable.
+
+---
+
+### 1.6 Endianness
+
+- **Big endian**: most significant byte stored first.
+- **Little endian**: least significant byte first.
+- Example: `0x12345678`:
+
+  - Big endian = `12 34 56 78`.
+  - Little endian = `78 56 34 12`.
+
+⚡ **Why relevant**: Same binary file may look different on different systems. Exam may show hex dump.
+
+---
+
+### 1.7 File Structures
+
+- Files usually = **header + data**.
+- Example: BMP image file:
+
+  - Header fields: file size, width, height, bit depth.
+  - Pixel data follows header.
+
+- **Hex editor** shows file as hex + ASCII text.
+
+⚡ **Exam style**: They may ask to locate pixel data offset or compute file size from header.
+
+---
+
+## 2. CPU & Simple Machine
+
+### 2.1 CPU Architecture
+
+- **ALU**: arithmetic & logic operations.
+- **Registers**: fastest memory inside CPU. Examples:
+
+  - PC (program counter), IR (instruction register), ACC (accumulator).
+
+- **Control unit**: fetch/decode instructions, manage signals.
+- **Main memory**: slower but larger.
+
+⚡ **Comparison**: Registers are like your “scratchpad,” memory is like your “notebook.”
+
+---
+
+### 2.2 Instruction Cycle
+
+1. **Fetch**: load instruction at PC → IR.
+2. **Decode**: figure out opcode + operand.
+3. **Execute**: perform ALU/memory operation.
+4. PC increments or jumps.
+
+---
+
+### 2.3 Instruction Format (Simple Machine)
+
+- 16 bits: 4-bit **opcode**, 12-bit **operand**.
+- Example: `0010 0000 0000 1010` → opcode=2, operand=10.
+
+⚡ **Operand types**: could be memory address, register, or constant.
+
+---
+
+### 2.4 Load–Store Architecture
+
+- ALU can’t work directly with memory.
+- Must load into register → operate → store back.
+
+Example: `C = A + B`:
+
+```
+LOAD R1, A
+LOAD R2, B
+ADD R3, R1, R2
+STORE R3, C
+```
+
+---
+
+### 2.5 Bitwise Operations
+
+- **AND (&)**: mask bits.
+- **OR (|)**: set bits.
+- **XOR (^)**: toggle bits (used in parity, encryption).
+- **NOT (\~)**: invert.
+- **Shift / Rotate**: left/right moves bits, rotate wraps around.
+
+⚡ **Exam trick**: "Swap nibbles" = rotate by 4 bits.
+
+---
+
+### 2.6 SML (Simple Machine Language)
+
+- Example opcodes:
+
+  - `1` = LOAD
+  - `2` = STORE
+  - `3` = ADD
+  - `4` = SUBTRACT
+  - `5` = MULTIPLY
+  - `6` = DIVIDE
+  - `7` = BRANCH
+
+⚠️ **Important**: Emulator bug → avoid opcode 6 (floating ADD).
+
+⚡ **Exam style**: Trace execution of a short program (follow PC, registers).
+
+---
+
+## 3. Operating Systems & Linux
+
+### 3.1 What is an OS?
+
+- Software that manages hardware and provides services.
+- Functions: process management, memory management, I/O control, file system, security.
+
+---
+
+### 3.2 Process Management
+
+- **Process** = program in execution.
+- **States**:
+
+  - New, Ready, Running, Waiting, Terminated.
+
+- **Scheduling**:
+
+  - Preemptive (time-slicing, round robin).
+  - Non-preemptive (waits until process completes or blocks).
+
+⚡ **Outside mock Q**: Deadlock = processes wait forever. Requires mutual exclusion + hold/wait + no preemption + circular wait.
+
+---
+
+### 3.3 Memory Management
+
+- **Logical vs physical**: program thinks memory starts at 0, OS maps to real addresses.
+- **Paging**: memory divided into fixed-size pages. Avoids external fragmentation.
+- **Segmentation**: memory divided into variable-length logical units.
+- **Virtual memory**: extends RAM using disk.
+- **Thrashing**: when paging dominates CPU time.
+
+⚡ **Exam angle**: Compare paging vs segmentation.
+
+---
+
+### 3.4 System Calls
+
+- Examples:
+
+  - `open()`, `read()`, `write()`, `close()`.
+  - `fork()`, `exec()` for processes.
+
+- **Security**: OS prevents direct hardware access (e.g., cannot send raw disk commands).
+
+---
+
+### 3.5 IPC (Interprocess Communication)
+
+- **Shared memory**: fast, but needs synchronization.
+- **Message passing**: safe but slower.
+- **Semaphores**: counters controlling access (solve race conditions).
+- **Signals**: async notifications (e.g., Ctrl+C).
+
+---
+
+### 3.6 Linux Essentials
+
+- `ps`: show processes.
+- `top`: live process monitor.
+- `kill -9 PID`: force kill.
+- `cd`, `pwd`, `cp`, `rm`, `cat`, `echo`.
+- Network: `netstat -an` (Windows) shows open ports.
+
+⚡ **Exam trap**: `kill -9` sends SIGKILL (cannot be caught).
+
+---
+
+## 4. Embedded Systems & Arduino
+
+### 4.1 What is an Embedded System?
+
+- **Definition**: A computer system designed for one dedicated function, often within a larger system.
+- **Examples**: microwave ovens, washing machines, cars, medical devices.
+- **Contrast**: A PC is **general-purpose** (can run many applications), while embedded systems are **special-purpose**.
+
+⚡ **Why important**: Embedded systems dominate modern electronics. Arduino is your entry point.
+
+---
+
+### 4.2 Arduino Basics
+
+- **Arduino** = open-source platform with microcontroller board + IDE.
+
+- **Program structure**:
+
+  - `setup()`: runs once at startup.
+  - `loop()`: runs repeatedly forever.
+
+- Popular boards:
+
+  - **Uno** (ATmega328, beginner-friendly).
+  - **Mega** (more I/O pins, memory).
+  - **Nano** (small, USB powered).
+
+---
+
+### 4.3 Input / Output
+
+- **Digital I/O**:
+
+  - `pinMode(pin, INPUT/OUTPUT)` sets pin mode.
+  - `digitalWrite(pin, HIGH/LOW)` sets output voltage.
+  - `digitalRead(pin)` reads HIGH/LOW.
+
+- **Analog I/O**:
+
+  - `analogRead(pin)` returns 0–1023 (10-bit resolution, maps to 0–5V).
+  - `analogWrite(pin, value)` uses **PWM** to simulate analog output.
+
+    - Value: 0–255.
+    - Example: `analogWrite(9, 127)` \~ 50% duty cycle.
+
+⚡ **Duty cycle** = percentage of time signal is HIGH.
+Example: HIGH=2ms, LOW=8ms → 20% duty cycle → average voltage ≈ 1V if powered by 5V.
+
+---
+
+### 4.4 Serial Communication
+
+- Used for communication with PC or other devices.
+- `Serial.begin(baudrate)` sets rate (e.g., `115200`).
+- Sending data: `Serial.print()` or `Serial.println()`.
+- Receiving: `Serial.read()`.
+- Converting ASCII digit to number:
+
+  ```c
+  char c = '7';
+  int num = c - '0';  // = 7
+  ```
+
+⚡ **Exam angle**: Convert between raw characters and integer values.
+
+---
+
+## 5. Frontend Development (HTML, CSS, JS, Phaser)
+
+### 5.1 Web Basics
+
+- **DNS**: Domain Name System, translates domain names → IP addresses.
+- **HTTP vs HTTPS**:
+
+  - HTTP: plaintext, insecure.
+  - HTTPS: encrypted with TLS.
+
+- **Browser role**: interprets HTML, CSS, JS → renders web pages.
+
+---
+
+### 5.2 HTML
+
+- **Semantic tags**: carry meaning. Examples: `<header>`, `<nav>`, `<article>`, `<footer>`.
+- **Non-semantic tags**: `<div>`, `<span>` — no meaning, just containers.
+
+⚡ **Why care**: semantic HTML improves SEO & accessibility.
+
+---
+
+### 5.3 CSS
+
+- **Selectors**:
+
+  - `#id`: unique element.
+  - `.class`: group of elements.
+  - `tag`: all tags of that type.
+
+- **Box model**: every element = content + padding + border + margin.
+
+⚡ **Outside mock**: Specificity rules — inline > id > class > tag.
+
+---
+
+### 5.4 JavaScript Basics
+
+- **DOM manipulation**:
+
+  ```js
+  document.getElementById("btn").addEventListener("click", () => {
+    alert("Clicked!");
+  });
+  ```
+
+- **Properties**:
+
+  - `innerHTML`: HTML inside element.
+  - `value`: input field value.
+
+- **Dynamic access**:
+
+  - `config[setting]` if `setting = "theme"`.
+
+---
+
+### 5.5 Dialogs
+
+- `alert("msg")`: info box.
+- `confirm("msg")`: returns true/false.
+- `prompt("msg")`: user input as string.
+
+---
+
+### 5.6 Fetch & Promises
+
+- **Promise** = object for async result.
+- Fetch example:
+
+  ```js
+  fetch("/api/data")
+    .then((res) => res.json())
+    .then((data) => console.log(data))
+    .catch((err) => console.error(err));
+  ```
+
+- `.then()` = success, `.catch()` = error.
+- GET = retrieve, POST = create/update.
+
+⚡ **Trick**: POST is not encrypted unless HTTPS is used.
+
+---
+
+### 5.7 Phaser (Game Framework)
+
+- **Lifecycle**:
+
+  - `preload()`: load assets (images, audio).
+  - `create()`: build objects, set scene.
+  - `update()`: runs each frame (\~60 fps).
+
+- **Events**:
+
+  ```js
+  this.input.on("pointerdown", () => { ... }, this);
+  ```
+
+- **Rules**: Must load assets in `preload()` before use.
+
+⚡ **Outside mock**: Collision detection uses physics engine in Phaser.
+
+---
+
+## 6. Backend 1 (JSON, HTTP, REST, Express, NPM)
+
+### 6.1 JSON
+
+- Syntax: `{ "key": "value" }`.
+- Supports types: String, Number, Boolean, Null, Array, Object.
+- Common in APIs.
+- JS methods:
+
+  - `JSON.stringify(obj)` → string.
+  - `JSON.parse(str)` → object.
+
+---
+
+### 6.2 HTTP
+
+- **Request structure**: method + URL + headers + body.
+- **Response**: status code + headers + body.
+- **Status codes**:
+
+  - 200 OK
+  - 201 Created
+  - 404 Not Found
+  - 500 Internal Server Error
+
+⚡ **Outside mock**: 301 = permanent redirect.
+
+---
+
+### 6.3 REST
+
+- **Principles**:
+
+  - Stateless.
+  - Resource-based.
+  - Uses HTTP verbs.
+
+- **Mapping**:
+
+  - GET `/books` → list books.
+  - POST `/books` → add book.
+  - PUT `/books/:id` → update.
+  - DELETE `/books/:id` → remove.
+
+---
+
+### 6.4 Express.js
+
+- Node.js framework for servers.
+- Example route:
+
+  ```js
+  app.get("/books/:id", (req, res) => {
+    res.send("Book ID " + req.params.id);
+  });
+  ```
+
+- Middleware: functions that run before request handler.
+
+---
+
+### 6.5 NPM
+
+- Node package manager.
+- **package.json**: defines project dependencies.
+- `npm install`: install dependencies.
+- `npm start`: run app.
+
+---
+
+## 7. Backend 2 (Cloud & MongoDB)
+
+### 7.1 Cloud Computing
+
+- **Deployment models**:
+
+  - Public: AWS, Azure, GCP.
+  - Private: internal only.
+  - Hybrid: mix.
+
+- **Service models**:
+
+  - IaaS: VMs, storage (AWS EC2).
+  - PaaS: ready platforms (Heroku).
+  - SaaS: complete apps (Google Docs).
+
+⚡ **Outside mock**: FaaS (Function-as-a-Service, e.g., AWS Lambda).
+
+---
+
+### 7.2 MongoDB
+
+- **NoSQL database** (document-oriented).
+
+- Stores data in **BSON** (binary JSON).
+
+- **Collections** = tables.
+
+- **Documents** = rows.
+
+- **Advantages**:
+
+  - Schema flexibility.
+  - Horizontal scaling (sharding).
+
+- **Query operators**:
+
+  - `{ age: { $gt: 30 } }` → age > 30.
+  - `{ dept: { $ne: "Sales" } }` → not Sales.
+  - `{ $or: [{a:1}, {b:2}] }` → OR.
+
+- **Sort**: `{ age: -1 }` → descending.
+
+- **Tools**:
+
+  - **Atlas** = cloud DB service.
+  - **Compass** = GUI client.
+
+⚡ **Outside mock**: ACID vs BASE.
+
+- Traditional SQL = ACID (strong consistency).
+- MongoDB = BASE (eventual consistency, flexible).
+
+---
+
+## 8. Exam Strategy
+
+- 120 questions / 180 minutes → **1.5 min per question**.
+- **Pass 1**: Answer easy ones quickly.
+- **Pass 2**: Work through CPU trace, binary/hex conversion, SML programs.
+- **Pass 3**: Re-check flagged.
+
+⚡ Common pitfalls:
+
+- Forgetting range formulas.
+- Mixing endianness.
+- Misreading opcode fields.
+- Assuming POST = secure (only HTTPS secures).
+- Floating point precision vs range confusion.
+- Using opcode 6 in emulator (avoid!).

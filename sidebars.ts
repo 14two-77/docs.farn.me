@@ -22,6 +22,11 @@ const sidebars: SidebarsConfig = {
       label: 'Computer Programming',
       items: ['com-prog/quiz1'],
     },
+    {
+      type: 'category',
+      label: 'Intro to CEDT',
+      items: ['i2cedt/final'],
+    },
   ],
 };
 
