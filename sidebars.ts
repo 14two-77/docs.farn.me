@@ -1,4 +1,4 @@
-import type {SidebarsConfig} from '@docusaurus/plugin-content-docs';
+import type { SidebarsConfig } from "@docusaurus/plugin-content-docs";
 
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
 
@@ -18,14 +18,14 @@ const sidebars: SidebarsConfig = {
   // But you can create a sidebar manually
   tutorialSidebar: [
     {
-      type: 'category',
-      label: 'Computer Programming',
-      items: ['com-prog/quiz1'],
+      type: "category",
+      label: "Computer Programming",
+      items: ["com-prog/quiz1"],
     },
     {
-      type: 'category',
-      label: 'Intro to CEDT',
-      items: ['i2cedt/final'],
+      type: "category",
+      label: "Intro to CEDT",
+      items: ["i2cedt/final", "i2cedt/final-project"],
     },
   ],
 };
