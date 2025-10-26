@@ -27,6 +27,11 @@ const sidebars: SidebarsConfig = {
       label: "Intro to CEDT",
       items: ["i2cedt/final", "i2cedt/final-project"],
     },
+    {
+      type: "category",
+      label: "Digital Computer Logic",
+      items: ["dcl/quiz3"],
+    },
   ],
 };
 

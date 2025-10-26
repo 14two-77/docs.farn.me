@@ -1,0 +1,90 @@
+---
+sidebar_position: 1
+---
+
+
+# Comprehensive List of Digital Logic & Architecture Acronyms
+
+## Category 1: Basic Digital & Combinational Logic
+
+*   **BCD - Binary-Coded Decimal**
+    *   **What it is:** A way to represent decimal digits 0-9 using a 4-bit binary code. For example, the number 25 would be `0010 0101` in BCD.
+    *   **Why it's important:** It's useful in systems that need to interface with decimal displays (like calculators or digital clocks) because it avoids complex binary-to-decimal conversion. (Relevant to Q5)
+
+*   **CMOS - Complementary Metal-Oxide-Semiconductor**
+    *   **What it is:** The dominant technology for making modern integrated circuits (chips). It uses pairs of complementary (one N-type, one P-type) transistors to build logic gates, which results in very low static power consumption.
+    *   **Why it's important:** It's the fundamental building block of virtually every digital device you use, from your phone to your computer. (Relevant to Q13)
+
+*   **TTL - Transistor-Transistor Logic**
+    *   **What it is:** An older family of digital logic built from bipolar junction transistors.
+    *   **Why it's important:** It was the standard for many years before CMOS took over. Understanding its existence provides context for the evolution of digital electronics.
+
+*   **PAL / PLA / PLD - Programmable Logic**
+    *   **PLD (Programmable Logic Device):** A general term for a chip that can be configured by the user to implement a custom digital logic circuit.
+    *   **PAL (Programmable Array Logic):** A type of PLD with a programmable AND-plane and a fixed OR-plane. This makes them simpler and faster than PLAs but less flexible.
+    *   **PLA (Programmable Logic Array):** A type of PLD with both a programmable AND-plane and a programmable OR-plane. This makes them highly flexible but more complex and slightly slower than PALs.
+    *   **Why they're important:** They were the precursors to modern FPGAs and are a key example of how to create flexible, regular logic structures. (Relevant to Q22)
+
+*   **ROM - Read-Only Memory**
+    *   **What it is:** A type of memory where the data is permanently stored and cannot be easily changed. It's essentially a lookup table.
+    *   **Why it's important:** A ROM can be used to implement any combinational logic function. The inputs form the "address," and the data stored at that address is the "output." (Relevant to Q26)
+
+## Category 2: Sequential Logic
+
+*   **FSM - Finite State Machine**
+    *   **What it is:** An abstract model used to design sequential circuits. It is defined by a finite number of states, a set of inputs, a set of outputs, and the transitions between states based on inputs.
+    *   **Why it's important:** It's the core concept behind any circuit that has "memory" or performs a sequence of operations, including the control unit of a CPU. (Relevant to Q18)
+
+*   **ASM - Algorithmic State Machine**
+    *   **What it is:** A flowchart-based method for designing and representing a Finite State Machine. It's more structured than a simple state diagram and is excellent for translating a procedural algorithm into a hardware control unit.
+    *   **Why it's important:** It's the bridge between a software-like algorithm and the hardware that will execute it. It clearly defines what happens in each state (clock cycle).
+
+*   **FF - Flip-Flop**
+    *   **What it is:** The fundamental building block of sequential logic. A flip-flop is a circuit that can store a single bit (0 or 1). Edge-triggered flip-flops (like a D-FF) change their state only at the rising or falling edge of a clock signal.
+    *   **Why it's important:** Collections of flip-flops form registers, which are the basis of all memory inside a CPU.
+
+## Category 3: Computer Architecture & ISA
+
+*   **ISA - Instruction Set Architecture**
+    *   **What it is:** The complete specification of a processor as seen by a software programmer. It defines the instructions the CPU can execute, the registers available, memory addressing modes, etc. It is the boundary between hardware and software.
+    *   **Why it's important:** Every program is ultimately compiled down to the ISA of the target machine. Different ISAs (like x86 vs. ARM) are not compatible. (Relevant to Q30)
+
+*   **CISC - Complex Instruction Set Computer**
+    *   **What it is:** An ISA philosophy that emphasizes powerful, complex instructions. The goal is to make the compiler's job easier and reduce the number of instructions per program.
+    *   **Why it's important:** The dominant architecture in desktops and servers (Intel x86). (Relevant to Q16)
+
+*   **RISC - Reduced Instruction Set Computer**
+    *   **What it is:** An ISA philosophy that emphasizes a small, simple, and highly optimized set of instructions. It relies on a smart compiler to perform complex tasks. The goal is faster, more efficient execution through techniques like pipelining.
+    *   **Why it's important:** The dominant architecture in mobile devices (ARM) and the internal foundation of modern CISC processors.
+
+*   **VLIW - Very Long Instruction Word**
+    *   **What it is:** An ISA where the compiler is responsible for finding multiple independent instructions and bundling them together into a single "very long" instruction to be executed in parallel by the hardware.
+    *   **Why it's important:** It represents the peak of *static* (compiler-based) scheduling to achieve instruction-level parallelism. (Relevant to Q21)
+
+*   **ALU - Arithmetic Logic Unit**
+    *   **What it is:** The part of the CPU that performs calculations like addition, subtraction, AND, and OR.
+    *   **Why it's important:** It's the mathematical "brain" of the processor. (Relevant to Q7)
+
+*   **RTL - Register-Transfer Level / Language**
+    *   **What it is:** A level of abstraction for designing hardware. RTL describes a circuit by defining how data moves between registers and the logical operations performed on that data. Expressions like `R[rd] <- R[rs] + R[rt]` are written in RTL.
+    *   **Why it's important:** It's how architects design the datapath and specify what happens in each step of an instruction's execution.
+
+*   **Flynn's Taxonomy (SISD, SIMD, MISD, MIMD)**
+    *   **SISD:** Single Instruction, Single Data (a standard uniprocessor).
+    *   **SIMD:** Single Instruction, Multiple Data (vector processors, GPUs).
+    *   **MISD:** Multiple Instruction, Single Data (rare, used for fault tolerance). (Relevant to Q8)
+    *   **MIMD:** Multiple Instruction, Multiple Data (multi-core processors).
+
+## Category 4: Memory and Storage
+
+*   **SRAM / DRAM - Static / Dynamic RAM**
+    *   **SRAM (Static):** Fast, expensive, low-density. Used for **cache**. Doesn't need refreshing.
+    *   **DRAM (Dynamic):** Slower, cheap, high-density. Used for **main memory**. Must be refreshed constantly. (Relevant to Q9)
+
+*   **TLB - Translation Lookaside Buffer**
+    *   **What it is:** A special-purpose hardware cache that stores recent virtual-to-physical address translations.
+    *   **Why it's important:** It's essential for making virtual memory practical. Without it, every memory access would be slowed down by a trip to the main-memory-based page table. (Relevant to Q3, Q23)
+
+*   **RAID - Redundant Array of Independent Disks**
+    *   **What it is:** A technology that combines multiple physical disk drives into a single logical unit to improve performance, reliability, or both.
+    *   **Why it's important:** It's the basis of most enterprise storage systems. Knowing the difference between RAID 0, 1, and 5 is key. (Relevant to Q4)
