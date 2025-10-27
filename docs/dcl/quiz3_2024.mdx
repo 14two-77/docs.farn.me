@@ -1,0 +1,305 @@
+---
+sidebar_position: 1
+---
+
+# Quiz 2024
+
+**1.** Fixed 24-bit instruction, 16 registers, 20 instructions.
+
+* `N = #bits for register` = ceil(log2(16)) = **4**
+* `M = #bits for opcode` = ceil(log2(20)) = **5**
+* `O = immediate bits` = 24 − M − N = 24 − 5 − 4 = **15**
+* `A` (PC increment per instruction) = **1** (PC advances to next instruction; if PC is in instruction-addresses rather than bytes, this is 1 instruction).
+  **Answer:** **M=5, N=4, O=15, A=1**
+
+---
+
+**2.** Which architecture has the least WAR (Write-After-Read) hazards?
+
+* **Multiple Cycle CPU** (non-pipelined / no overlapping of instruction phases → no anti-dependency hazards).
+  **Answer:** **Multiple Cycle CPU**
+
+---
+
+**3.** Single-cycle cycle time = 200 ns. Which multi-cycle config is **slower** than single-cycle?
+Compute CPU time = CPI × CycleTime. Compare to 200 ns: only **25 ns × 9.0 = 225 ns** > 200 ns.
+**Answer:** **Cycle time 25 ns, CPI 9.0**
+
+---
+
+**4.** (F(A,B,C) = A B' + A' C)
+
+* SOP (sum of minterms): determine minterms where F = 1.
+
+  * A=1,B=0 → (A,B,C) = (1,0,0)=4 and (1,0,1)=5
+  * A=0,C=1 → (0,0,1)=1 and (0,1,1)=3
+    → **SOP = Σ m(1,3,4,5)**
+* POS (product of maxterms): remaining indices {0,2,6,7}
+  → **POS = Π M(0,2,6,7)**
+
+**Answer:** **SOP m(1,3,4,5); POS M(0,2,6,7)**
+
+---
+
+**5.** Which is correct about DRAM vs SRAM?
+
+* **DRAM has higher density (capacity) per unit than SRAM.** (SRAM is faster and more expensive.)
+  **Answer:** **DRAM มีความจุต่อหน่วยมากกว่า SRAM**
+
+---
+
+**6.** When comparing machines on collections of benchmarks (SPEC), use which mean?
+
+* **Geometric mean** for summarizing relative speedups (normalizes ratios).
+  **Answer:** **Geometric mean**
+
+---
+
+**7.** Given restricted alignment, compute memory usage (original order) and minimal ordering.
+
+Types: `char=1, short=2, int=4, double=8`.
+
+Original order:
+
+```
+short a;   // align 2 -> at offset 0..1
+int   b;   // align 4 -> next offset 4..7 (2 bytes padding after short)
+char  c;   // offset 8
+int   d;   // align 4 -> next multiple of 4 >=9 => offset 12..15 (3 bytes padding)
+char  e;   // offset 16
+double f;  // align 8 -> next multiple of 8 >=17 => offset 24..31 (7 bytes padding)
+```
+
+* **Total (original)** = **32 bytes**
+
+Reorder to minimize (place largest-alignment first):
+`double f; int b; int d; short a; char c; char e;`
+Layout:
+
+* double at 0..7
+* int at 8..11
+* int at 12..15
+* short at 16..17
+* char at 18
+* char at 19
+* **Total (optimized)** = **20 bytes**
+
+**Answer:** **Original 32 bytes, New 20 bytes**
+
+---
+
+**8.** Which is correct?
+Options: (only the true one)
+
+* **A 1-bit half-adder uses 1 XOR and 1 AND** — **TRUE**.
+  (Other statements are false/misleading.)
+  **Answer:** **The half adder uses XOR (1) and AND (1).**
+
+---
+
+**9.** Given Pa=0.25, Pb=0.30, Pc=0.35 (slower to 0.8×), Pd=0.10 — A sped ×2.0, B ×3.0, C ×0.8. Find sD so overall speedup = 1.25.
+
+Use Amdahl generalized: overall denom = Σ (Pi / si) = 1/Speedup.
+
+Compute:
+
+* Pa/sA = 0.25 / 2.0 = 0.125
+* Pb/sB = 0.30 / 3.0 = 0.100
+* Pc/sC = 0.35 / 0.8 = 0.4375
+  Sum so far = 0.6625. Need total denom = 1/1.25 = 0.8. So
+* 0.6625 + 0.10 / sD = 0.8 ⇒ 0.10 / sD = 0.1375 ⇒ sD = 0.10 / 0.1375 = **0.727272...**
+
+**Answer:** **sD ≈ 0.7273**
+
+(So D would need to run at ~0.727× of original — i.e., slower — to get the given numbers; if you instead want D to be faster, re-check targets/constraints.)
+
+---
+
+**10.** For extremely fault-tolerant computing (specialized FT architectures) in Flynn taxonomy:
+
+* **MISD** (multiple instructions on same data) is the taxonomy often mentioned in FT contexts.
+  **Answer:** **MISD**
+
+---
+
+**11.** CPU A vs CPU B:
+
+CPU A:
+
+* IC_A = 100M
+* CPI_A = 0.2×2 + 0.3×4 + 0.5×6 = 0.4 + 1.2 + 3.0 = **4.6**
+* Clock rate = 2.4 GHz ⇒ cycle time = 1/2.4 GHz ≈ 0.4166667 ns
+* CPU_time_A = (100e6 × 4.6) / 2.4e9 = 460e6 / 2.4e9 = **0.1916667 s** ≈ **0.192 s**
+
+CPU B:
+
+* IC_B = 120M, avg CPI = 4.20, cycle time = 1 ns
+* CPU_time_B = 120e6 × 4.2 × 1e-9 = 504e6 ×1e-9 = **0.504 s**
+
+Speedup A over B = CPU_time_B / CPU_time_A = 0.504 / 0.1916667 ≈ **2.63**
+
+**Answer:** **Speedup ≈ 2.63 ; CPU time A ≈ 0.192 s ; CPU time B = 0.504 s**
+
+---
+
+**12.** **HDL** — *Hardware Description Language*
+Short explanation: textual language (e.g., Verilog, VHDL) used to describe hardware structure and behavior for simulation and synthesis into real circuits or FPGA; used to specify gates, registers, state machines, and timing.
+
+**Answer:** HDL = Hardware Description Language (brief explanation as above)
+
+---
+
+**13.** 4-digit verification code — **read the exam cover page** (I can’t know it here).
+**Answer:** *(Copy the 4-digit code from your exam cover sheet.)*
+
+---
+
+**14.** **ISA** — *Instruction Set Architecture*
+Short: the programmer-visible interface of the machine (instructions, registers, addressing modes) that software targets.
+
+---
+
+**15.** **ALU** — *Arithmetic Logic Unit*
+Short: CPU unit that performs arithmetic (add/sub/mul/div) and bitwise logical ops (AND/OR/XOR/NOT), shifts, etc.
+
+---
+
+**16.** **ROM** — *Read-Only Memory*
+Short: non-volatile storage used to hold firmware/boot code or fixed tables; contents are not changed during normal operation.
+
+---
+
+**17.** Which is true about TLB?
+
+* Correct: **TLB helps translate virtual addresses to physical addresses** (small fast cache of page table entries).
+  **Answer:** **TLB ทำหน้าที่ช่วยในการแปลงจาก virtual address ไปเป็น physical address**
+
+---
+
+**18.** **BCD** — *Binary-Coded Decimal*
+Short: decimal digits encoded individually in binary (commonly 4 bits per decimal digit); used when exact decimal digit representation is needed (financial calcs, displays).
+
+---
+
+**19.** **VLIW** — *Very Long Instruction Word*
+Short: an architecture where the compiler packs multiple independent operations into a single long instruction word to be executed in parallel by multiple functional units; scheduling is static (compiler-driven).
+
+---
+
+**20.** Multicycle CPU (no pipeline). Instruction cycles:
+
+* LW = 2 cycles
+* ADD / ORI / SW = 3 cycles
+* BEQ / JMP = 4 cycles
+
+Sequence cycles:
+
+```
+LW $r2,20($r1)     -> 2  
+LW $r3,4($r4)      -> 2  
+ADD $r5,$r2,$r3    -> 3  
+BEQ $r2,$r3,end    -> 4  (assume not taken)  
+ADD $r6,$r4,$r5    -> 3  
+ORI $r6,#1234      -> 3  
+SW $r7,8($r3)      -> 3  
+JMP 100            -> 4
+```
+
+Total cycles = 2+2+3+4+3+3+3+4 = **24 cycles**.
+Clock = 200 MHz → cycle time = 5 ns → CPU time = 24 × 5 ns = **120 ns**.
+
+**Answer:** **24 clocks; CPU time = 120 ns**
+
+---
+
+**21.** 4-person vote: A has weight 2, B,C,D weight 1 each. Pass if total ≥ 3.
+
+Boolean expression: sum≥3 → cases:
+
+* A=1 and at least one of B,C,D = 1 → (A(B + C + D))
+* Or all three of B,C,D = 1 (if A=0) → (B C D)
+
+Expanded SOP: (F = A B + A C + A D + B C D).
+
+**Answer:** **(F = AB + AC + AD + BCD)**
+
+(That SOP implements ≥3 votes; it's hazard-aware when implemented carefully — consensus terms can be added if needed.)
+
+---
+
+**22.** About Mealy vs Moore — which is true? (pick one)
+
+* A classic true statement: **Mealy outputs can change faster because they depend on state and current inputs (so can react without waiting for next clock/state change)**.
+* Also true: Moore outputs depend only on state. Either may be correct; pick one typical exam answer: **สัญญาณ Output ในวงจร Mealy ออกมาได้เร็วกว่า Moore**.
+
+**Answer:** **สัญญาณ Output ในวงจร Mealy ออกมาได้เร็วกว่า Moore**
+
+---
+
+**23.** **TLB** — *Translation Lookaside Buffer* (see Q17). Short: a small fast cache that holds recent virtual→physical page translations to accelerate address translation and avoid reading page tables for every access.
+
+---
+
+**24.** **FSM** — *Finite State Machine*
+Short: model of sequential logic with finite distinct states; defined by state set, inputs, outputs and next-state and output functions (Moore/Mealy).
+
+---
+
+**25.** **CISC** — *Complex Instruction Set Computer*
+Short: ISA style with many powerful, variable-length, often memory-operating instructions (e.g., complex addressing modes). Historically trades simpler hardware pipelining for richer instructions (x86 started CISC).
+
+---
+
+**26.** Cache write strategy for read-dominant workload with large line size and occasional writes: choose **Write-back** (reduces memory traffic; paired with write-allocate if you want to cache on write). For read-dominant with large lines, write-back is beneficial.
+
+**Answer:** **Write back**
+
+---
+
+**27.** Clock Skew — which option describes it?
+
+* **Clock skew = the clock signal arrives at different devices at slightly different times.**
+  **Answer:** **สัญญาณ Clock ไปถึงอุปกรณ์แต่ละตัวไม่เท่ากัน**
+
+---
+
+**28.** **CMOS** — *Complementary Metal-Oxide-Semiconductor*
+Short: transistor technology using PMOS and NMOS complements for logic gates (very low static power when stable, dominant tech for logic ICs and microprocessors).
+
+---
+
+**29.** If data must be extremely reliable (no errors allowed) — which RAID?
+
+* **RAID 1 (mirroring)** gives highest redundancy (full copy). RAID6 tolerates two disk failures but RAID1 is simplest for absolute redundancy. Usually answer expected: **RAID 1**.
+
+**Answer:** **RAID 1**
+
+---
+
+**30.** Build 32:1 MUX from components — feasible option: **2 × 16:1 MUX + 1 × 2:1 MUX** (two 16:1 produce two outputs, final 2:1 chooses between them). Other answers are invalid.
+**Answer:** **2 x 16:1 Mux + 1 x 2:1 Mux**
+
+---
+
+**31.** Cache parameters:
+
+* 8-way associative, 128 lines, block size 32 bytes, 16-bit address.
+
+  * #lines = 128 → data bytes = 128 × 32 = **4096 bytes = 4 KB** (cache size)
+  * #sets = 128 / 8 = 16 sets → index bits = log2(16) = 4
+  * offset bits = log2(32) = 5
+  * tag bits = 16 − 4 − 5 = **7 bits**
+    Address 0x326A: compute set index = bits [8:5] of address (hex 0x326A binary = 0011 0010 0110 1010) → bits8..5 = 0011 = decimal **3**.
+    **Answer:** **Cache size = 4096 bytes; Tag = 7 bits; Line (set) to check = 3 (decimal)**
+
+---
+
+**32.** *Count sequence from the given counter circuit.* — I could not access the linked image (Drive returned permission error). Many exam circuits use either a binary ripple counter or a Johnson (twisted ring) counter. **Assuming a standard 4-bit Johnson counter** (common in exams), the repeating sequence of outputs (A B C D) is:
+
+* **From initial 0000:**
+  0000 → 0001 → 0011 → 0111 → 1111 → 1110 → 1100 → 1000 → (back to) 0000 ...
+* **From initial 1000:**
+  1000 → 0000 → 0001 → 0011 → 0111 → 1111 → 1110 → 1100 → 1000 ...
+
+If your actual circuit is a different counter (e.g., binary up/down or Gray code), upload the image or paste the screenshot and I will produce the exact sequence immediately.
+

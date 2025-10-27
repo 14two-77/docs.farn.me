@@ -1,0 +1,148 @@
+---
+sidebar_position: 6
+---
+
+# Final Project ASM Example
+
+## Understanding the ASM Chart
+
+An ASM chart is a specific type of state diagram that is well-suited for designing digital control systems. It has three basic components:
+
+1.  **State Box (Rectangle):** Represents a single state. The machine stays in this state for one clock cycle. Inside the box, you list any *unconditional* actions (Moore outputs) that happen in this state. For example, `PC ← PC + 1`.
+2.  **Decision Box (Diamond):** Represents a condition that is tested. It has one input and two or more outputs (e.g., "True" and "False"). This determines which state the machine will go to next.
+3.  **Conditional Output Box (Oval or Rounded Rectangle):** Represents actions that are performed *only if* a certain condition is met (Mealy outputs). It's always attached to a "True" path from a Decision Box.
+
+---
+
+## High-Level ASM Flow for Your Mini CPU
+
+Before diving into the full detail, let's look at the overall flow. Every instruction goes through this fundamental cycle:
+
+1.  **FETCH:** Get the instruction from Program RAM (pRAM).
+2.  **DECODE:** Figure out what the instruction is based on its opcode.
+3.  **EXECUTE:** Perform the required operation. This is the most complex part, as different instructions do vastly different things.
+4.  **(Optional) MEMORY:** Some instructions need to access the Result RAM (rRAM) to read or write data.
+5.  **(Optional) WRITE-BACK:** Write the result of a calculation back into a register (like `accA`).
+
+This entire cycle will be broken down into multiple states, with each state taking one clock cycle. We also need an initial state for when the CPU is reset.
+
+---
+
+## Detailed ASM Diagram (Described in Text)
+
+Here is a step-by-step description of the ASM chart for your CPU. You can draw this out on paper or in a diagram tool based on this logic.
+
+### State 0: RESET_STATE
+*   **Entry Condition:** The `reset` signal is high.
+*   **State Box Actions:**
+    *   `PC ← 0` (Program Counter starts at address 0x00)
+    *   `accA ← 0`, `accB ← 0`, `regC ← 0`, `regD ← 0`
+    *   `equal_flag ← 0`, `greater_flag ← 0`, `lesser_flag ← 0`
+    *   `valid ← 0`, `done ← 0`
+*   **Decision:**
+    *   Check `reset` signal. If `reset` is still high, loop back to this state.
+    *   If `reset` goes low, transition to **FETCH_1**.
+
+---
+### State 1: FETCH_1
+*   **State Box Actions:**
+    *   Set pRAM's address to the value of the Program Counter (PC). (This prepares for the memory read).
+*   **Transition:** Unconditionally go to **FETCH_2**.
+
+---
+### State 2: FETCH_2
+*   **State Box Actions:**
+    *   Load the 14-bit instruction from pRAM into the **Instruction Register (IR)**.
+    *   Increment the Program Counter: `PC ← PC + 1`. (This points the PC to the *next* instruction, which is crucial).
+*   **Transition:** Unconditionally go to **DECODE**.
+
+---
+### State 3: DECODE
+*   **State Box Actions:** (None) This state is purely for branching.
+*   **Decision Chain:** This is the main dispatcher. The Control Unit looks at the 6-bit opcode stored in the IR (`IR[13:8]`).
+    *   If `opcode == 000000 (NOPE)` -> Go to **FETCH_1**.
+    *   If `opcode == 000001 (accA ← Operand)` -> Go to **EXEC_REG_WRITE**.
+    *   If `opcode == 000011 (accA ← accB)` -> Go to **EXEC_REG_WRITE**.
+    *   If `opcode == 100000 (accA ← accA + accB)` -> Go to **EXEC_ALU**.
+    *   If `opcode == 010001 (rRAM_adr[Op] ← accA)` -> Go to **MEM_WRITE**.
+    *   If `opcode == 010000 (accA ← rRAM_adr[Op])` -> Go to **MEM_ADDR_CALC**.
+    *   If `opcode == 010010 (Jump)` -> Go to **EXEC_JUMP**.
+    *   If `opcode == 010011 (Jump if eq)` -> Check `equal_flag`.
+        *   If `equal_flag == 1` -> Go to **EXEC_JUMP**.
+        *   If `equal_flag == 0` -> Go to **FETCH_1**.
+    *   If `opcode == 111111 (STOP)` -> Go to **STOP_STATE**.
+    *   ...and so on for every other opcode category.
+
+---
+### Execution States
+
+This is a sample of the various execution paths that branch out from the DECODE state.
+
+**Path for Register Writes (e.g., `accA ← Operand`, `accA ← accB`)**
+### State 4: EXEC_REG_WRITE
+*   **State Box Actions:**
+    *   This state uses the opcode to select the correct data source via a multiplexer.
+    *   If `opcode == 000001`, select `IR[7:0]` (the operand).
+    *   If `opcode == 000011`, select the value from `accB`.
+    *   ...and so on.
+    *   The output of this multiplexer is fed to the input of the target register (`accA`, `regC`, etc.).
+    *   Enable the write signal for the target register (e.g., `accA_write_enable ← 1`).
+*   **Transition:** Go back to **FETCH_1**.
+
+**Path for ALU Operations (e.g., `accA ← accA + accB`)**
+### State 5: EXEC_ALU
+*   **State Box Actions:**
+    *   Set ALU control signals based on the opcode (`ALU_op ← ADD`).
+    *   Select the correct registers to feed into the ALU's inputs (e.g., Input1 MUX selects `accA`, Input2 MUX selects `accB`).
+    *   The result is calculated combinationally within this clock cycle.
+*   **Transition:** Go to **WRITE_BACK**.
+
+### State 6: WRITE_BACK
+*   **State Box Actions:**
+    *   Select the ALU's output as the data source.
+    *   Enable the write signal for the destination register (e.g., `accA_write_enable ← 1`).
+*   **Transition:** Go back to **FETCH_1**.
+
+**Path for Memory Load (e.g., `accA ← rRAM_adr[Operand]`)**
+### State 7: MEM_ADDR_CALC
+*   **State Box Actions:**
+    *   Set rRAM's address to `IR[7:0]` (the operand).
+*   **Transition:** Go to **MEM_READ**.
+
+### State 8: MEM_READ
+*   **State Box Actions:**
+    *   The data from rRAM is now available. Load it into a temporary internal register (let's call it `DATA_REG`).
+*   **Transition:** Go to **WRITE_BACK_MEM**.
+
+### State 9: WRITE_BACK_MEM
+*   **State Box Actions:**
+    *   Select `DATA_REG` as the data source.
+    *   Enable the write signal for the destination register (`accA_write_enable ← 1`).
+*   **Transition:** Go back to **FETCH_1**.
+
+**Path for Memory Store (e.g., `rRAM_adr[Operand] ← accA`)**
+### State 10: MEM_WRITE
+*   **State Box Actions:**
+    *   Set rRAM's address to `IR[7:0]`.
+    *   Set rRAM's data input to the value from `accA`.
+    *   Set the rRAM write-enable signal high (`rRAM_write_enable ← 1`).
+*   **Transition:** Go back to **FETCH_1**.
+
+**Path for Jump Instructions**
+### State 11: EXEC_JUMP
+*   **State Box Actions:**
+    *   Load the PC with the operand value: `PC ← IR[7:0]`.
+*   **Transition:** Go back to **FETCH_1**.
+
+---
+### Final State: STOP_STATE
+*   **State Box Actions:**
+    *   `valid ← 1`
+*   **Decision:**
+    *   Check the `result` signal. If `result == 0`, loop back to this state.
+    *   If `result == 1`, transition to **OUTPUT_STATE**.
+
+### State 12: OUTPUT_STATE
+*   This state would handle sending the data from rRAM to the `output` port, likely using a counter to cycle through addresses 0x00 to 0x0F. Once done, it would set `done ← 1` and transition back to **RESET_STATE** or **FETCH_1** to await a new program.
+
+This ASM description provides the complete logic needed to build your Control Unit. You can see how each instruction is broken down into a sequence of small, manageable steps, with each step corresponding to a state in your FSM.

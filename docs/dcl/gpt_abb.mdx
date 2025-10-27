@@ -1,0 +1,47 @@
+---
+sidebar_position: 2
+---
+
+# GPT Arconyms
+
+
+| Abbrev  | Full English                                            | คำอธิบายสั้น ๆ (ไทย)                                                                |
+| ------- | ------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| ISA     | Instruction Set Architecture                            | อินเทอร์เฟซระหว่างซอฟต์แวร์และฮาร์ดแวร์ กำหนดคำสั่ง เรจิสเตอร์ และรูปแบบหน่วยความจำ |
+| ALU     | Arithmetic Logic Unit                                   | หน่วยคำนวณของ CPU ทำการบวก ลบ บิตเวิร์ค และการเลื่อนบิต                             |
+| CPU     | Central Processing Unit                                 | หน่วยประมวลผลกลางของคอมพิวเตอร์                                                     |
+| MIPS    | Million Instructions Per Second                         | หน่วยวัดความเร็วโดยประมาณของซีพียูเป็นล้านคำสั่งต่อวินาที                           |
+| SMT     | Simultaneous Multithreading                             | การรันคำสั่งจากหลายเธรดพร้อมกันในคอร์เดียวเพื่อใช้ทรัพยากรร่วมกัน                   |
+| FLOPS   | Floating Point Operations Per Second                    | หน่วยวัดประสิทธิภาพการคำนวณเลขทศนิยม (ลอยจุด) ต่อวินาที                             |
+| ROM     | Read-Only Memory                                        | หน่วยความจำที่อ่านได้อย่างเดียว มักเก็บเฟิร์มแวร์/บูตโค้ด                           |
+| SPEC    | Standard Performance Evaluation Corporation             | องค์กร/ชุดเบนช์มาร์กมาตรฐาน (เช่น SPEC CPU)                                         |
+| RAM     | Random Access Memory                                    | หน่วยความจำใช้งานชั่วคราวที่เข้าถึงตำแหน่งใดก็ได้                                   |
+| CPI     | Cycles Per Instruction                                  | จำนวนรอบนาฬิกาเฉลี่ยที่ใช้ต่อคำสั่งหนึ่งคำสั่ง                                      |
+| DRAM    | Dynamic Random Access Memory                            | หน่วยความจำหลักที่มีความจุมาก ต้องรีเฟรชและช้ากว่า SRAM                             |
+| SRAM    | Static Random Access Memory                             | หน่วยความจำเร็ว ใช้ในแคช แต่แพง/กินพื้นที่มากกว่า DRAM                              |
+| RISC    | Reduced Instruction Set Computer                        | สถาปัตยกรรมชุดคำสั่งเรียบง่าย เหมาะต่อการพายพ์ไลน์ (pipelining)                     |
+| CISC    | Complex Instruction Set Computer                        | ชุดคำสั่งซับซ้อน มีคำสั่งหลากหลาย รูปแบบยาว/สั้น                                    |
+| FIFO    | First-In First-Out                                      | โครงสร้างข้อมูล/บัฟเฟอร์ ที่เรียงลำดับเข้า → ออกตามลำดับเดียวกัน                    |
+| LRU     | Least Recently Used                                     | นโยบายแทนที่แคช เลือกบล็อกที่ไม่ได้ถูกใช้นานที่สุด                                  |
+| RTL     | Register Transfer Level (or Register Transfer Language) | ระดับการออกแบบฮาร์ดแวร์ที่อธิบายการย้ายข้อมูลและการทำงานของรีจิสเตอร์               |
+| TLB     | Translation Lookaside Buffer                            | แคชสำหรับการแปลง virtual → physical page entries ช่วยเร่งการแปลที่อยู่              |
+| RTS     | Request To Send                                         | สัญญาณ/คำสั่งควบคุมสำหรับการส่งข้อมูลในโปรโตคอล (เช่น UART)                         |
+| NAS     | Network Attached Storage                                | อุปกรณ์เก็บข้อมูลระดับไฟล์ ให้บริการผ่านเครือข่าย (NFS/SMB)                         |
+| Wr / WB | Write-back                                              | นโยบายเขียน: บันทึกข้อมูลกลับไปยังเมมโมรี่เมื่อบล็อกถูกแทนที่ (ลดการเขียนบ่อย)      |
+| SAN     | Storage Area Network                                    | เครือข่ายเก็บข้อมูลระดับบล็อก (iSCSI, Fibre Channel)                                |
+| WAR     | Write After Read                                        | anti-dependency (คำสั่งหลังเขียนตำแหน่งที่คำสั่งก่อนอ่าน)                           |
+| SSD     | Solid State Drive                                       | สื่อเก็บข้อมูลแฟลช เร็วกว่า HDD แต่ราคาต่อ GB สูงกว่า                               |
+| WAW     | Write After Write                                       | dependency เมื่อมีการเขียนตำแหน่งเดียวกันหลายคำสั่ง                                 |
+| HDD     | Hard Disk Drive                                         | สื่อเก็บข้อมูลแบบจานแม่เหล็ก ความจุสูง ต้นทุนต่ำ แต่ช้ากว่า SSD                     |
+| RAW     | Read After Write                                        | true dependency—คำสั่งหลังอ่านค่าที่คำสั่งก่อนเพิ่งเขียน                            |
+| JBOD    | Just a Bunch Of Disks                                   | การต่อฮาร์ดดิสก์เรียงกันโดยไม่ใช้ RAID (ไม่มี redundancy)                           |
+| ILP     | Instruction-Level Parallelism                           | ความสามารถในการรันคำสั่งหลายคำสั่งพร้อมกัน (ระดับคำสั่ง)                            |
+| VLIW    | Very Long Instruction Word                              | สถาปัตยกรรมที่รวมหลายคำสั่งไว้ในคำสั่งยาว ให้คอมไพเลอร์จัดการขนานแบบสเตติก          |
+| SISD    | Single Instruction Single Data                          | Flynn taxonomy: คอนเซปต์ซีพียูแบบดั้งเดิม (1 คำสั่ง 1 ข้อมูล)                       |
+| SIMD    | Single Instruction Multiple Data                        | คำสั่งเดียวประมวลผลหลายข้อมูลพร้อมกัน (vector/SIMD)                                 |
+| MISD    | Multiple Instruction Single Data                        | หายาก ใช้ในบางระบบ fault-tolerant (หลายคำสั่งบนข้อมูลเดียว)                         |
+| MIMD    | Multiple Instruction Multiple Data                      | หลายคำสั่ง หลายข้อมูล — multi-core/multi-processor                                  |
+| LW      | Load Word                                               | โหลดข้อมูล (word) จากหน่วยความจำเข้าสู่รีจิสเตอร์                                   |
+| SW      | Store Word                                              | เก็บข้อมูล (word) จากรีจิสเตอร์ลงหน่วยความจำ                                        |
+| ORI     | OR Immediate                                            | OR แบบ bitwise ระหว่างรีจิสเตอร์กับค่า immediate                                    |
+| BEQ     | Branch if Equal                                         | กระโดดเมื่อสองรีจิสเตอร์มีค่าเท่ากัน                                                |

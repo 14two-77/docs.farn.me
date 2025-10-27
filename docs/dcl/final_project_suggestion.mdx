@@ -1,0 +1,155 @@
+---
+sidebar_position: 5
+---
+
+# Final Project Suggestion
+
+## Conceptual Foundation: What is a CPU?
+
+Before touching the "Digital" software, you need to understand the big picture. A CPU (Central Processing Unit) is the "brain" of a computer. At its core, it does one thing repeatedly: it **fetches** an instruction from memory, **decodes** what the instruction means, and then **executes** it.
+
+This project requires you to build the three main parts of a simple CPU:
+
+1.  **Arithmetic Logic Unit (ALU):** The calculator part of the CPU. It performs mathematical operations like addition (`+`), subtraction (`-`), and logical operations like AND, OR, and XOR.
+2.  **Control Unit (CU):** The director or manager. It reads the instruction's *opcode* and generates control signals that tell the other parts of the CPU what to do (e.g., "ALU, you need to add now," or "Register A, you need to save this value").
+3.  **Registers:** Extremely fast, small storage locations directly inside the CPU. Your project specifies four main general-purpose registers: `accA`, `accB`, `regC`, and `regD`. You will also need internal registers, like:
+    *   **Program Counter (PC):** Keeps track of the memory address of the *next* instruction to be executed. This is one of the most important parts of the CPU.
+    *   **Instruction Register (IR):** Holds the current instruction while it is being decoded and executed.
+
+These components, along with memory interfaces, are connected by a system of data pathways called the **Datapath**.
+
+---
+
+## Phase 1: Deconstructing the Project Requirements
+
+The first step is always to thoroughly understand the specification document. Let's analyze the key parts.
+
+*   **Memory:**
+    *   **pRAM (Program RAM):** 256 locations, each 14 bits wide (`256 x 14`). This is where your program's instructions are stored.
+    *   **rRAM (Result RAM):** 256 locations, each 8 bits wide (`256 x 8`). This is for storing data and results. Your final answer comes from here.
+
+*   **Instruction Format (ISA - Instruction Set Architecture):**
+    *   Each instruction is 14 bits long.
+    *   It's split into a **6-bit Opcode** and an **8-bit Operand**.
+    *   **Opcode (bits 13-8):** This is the command, telling the CPU *what* to do (e.g., ADD, JUMP, LOAD).
+    *   **Operand (bits 7-0):** This is the data or address associated with the command. For example, in `accA ← Operand`, the 8-bit value in the operand part of the instruction is loaded into `accA`.
+
+*   **CPU Type: Multiple Cycle CPU**
+    *   The project forbids a "Single Cycle CPU" and requires a "Multiple Cycle CPU" or "Pipeline." Let's focus on **Multiple Cycle**, as it's the natural step up from a basic design.
+    *   **Single-Cycle CPU:** Every instruction takes exactly one clock cycle. This is simple but inefficient, as the clock cycle must be long enough for the *slowest possible instruction*.
+    *   **Multiple-Cycle CPU:** An instruction is broken down into smaller steps, and each step takes one clock cycle. For example:
+        1.  **Cycle 1 (Fetch):** Get the instruction from pRAM.
+        2.  **Cycle 2 (Decode):** Figure out what the instruction is and get any necessary data from registers.
+        3.  **Cycle 3+ (Execute):** Perform the operation (e.g., the ALU calculation, memory access). Simple instructions might finish here, while complex ones might take more cycles.
+    *   This approach allows for better hardware reuse and a faster clock speed.
+
+---
+
+## Phase 2: High-Level Design - The Datapath
+
+Now, let's sketch out how the components will connect. This is your architectural blueprint.
+
+1.  **Instruction Fetch Mechanism:**
+    *   You need a **Program Counter (PC)**, which is an 8-bit register (to address 256 locations).
+    *   The PC's output connects to the address input of the `pRAM`.
+    *   The 14-bit data output of the `pRAM` connects to the input of the **Instruction Register (IR)**.
+
+2.  **Decoding:**
+    *   The 14-bit output of the IR is split. The top 6 bits (the opcode) go to the **Control Unit**. The bottom 8 bits (the operand) are made available to the rest of the datapath.
+
+3.  **Registers and ALU:**
+    *   You'll have your four 8-bit registers: `accA`, `accB`, `regC`, `regD`. Each needs a "Write Enable" signal from the Control Unit.
+    *   The **ALU** will be the computational heart. Its inputs will come from the registers. Since the ALU can only take two inputs at a time, you'll need **Multiplexers (MUXs)** to select which registers feed into the ALU.
+        *   *Example:* The first ALU input could be selected from `accA`, `regC`, or another source. The second ALU input could be selected from `accB`, `regD`, `M`, `N`, or the Operand from the instruction. The Control Unit will manage these MUXs.
+    *   The ALU's 8-bit output will be a primary source of data to be written back into the registers.
+
+4.  **Data Flow and Busses:**
+    *   Think about the paths data can take. A value can come from:
+        *   The Operand field of the instruction.
+        *   The ALU result.
+        *   `pRAM` or `rRAM`.
+        *   Inputs `M` or `N`.
+    *   This data needs a path back to the inputs of the registers (`accA`, `accB`, etc.) and the data input of `rRAM`. Again, a **MUX** is the perfect tool to select which of these sources gets to write its value to a register or memory.
+
+
+*(This diagram is a conceptual sketch. Your final design will have more detailed connections and control signals.)*
+
+---
+
+## Phase 3: Building the Components in "Digital"
+
+Now you can start building the individual parts in the software.
+
+*   **Registers (`accA`, `regC`, PC, IR):** Use the `Register` or `CounterPreset` (for the PC) components. Remember to connect the clock (`clk`) and a write-enable signal for each. The PC will need logic to handle incrementing (`PC+1`) and loading a new address for JUMP instructions.
+*   **Memory (`pRAM`, `rRAM`):** Use the `RAMDualAccess` component provided in the template. Connect the address, data input (`D`), write-enable (`str`), and clock (`C`) signals.
+*   **The ALU:** This is a purely **combinational** block (no clock).
+    *   Create a sub-circuit for your ALU.
+    *   It will have two 8-bit data inputs (let's call them `A` and `B`) and a control input (e.g., a 4-bit `ALUOp`) that selects the operation.
+    *   Inside the ALU, you'll place all the required functional units: an `Add` component, a `Sub` component, `And`, `Or`, `Xor` gates, a `Shifter`, a `Comparator`, etc.
+    *   The outputs of all these units go into a large MUX. The `ALUOp` signal from the Control Unit will be the select line for this MUX, determining which result (addition, subtraction, etc.) is passed to the ALU's final output.
+    *   For operations like `isPrime` or `LCM`, you may need to build more complex dedicated circuits.
+
+---
+
+## Phase 4: Designing the Control Unit (The Brain)
+
+This is the most challenging but also the most creative part. The Control Unit is a **Finite State Machine (FSM)**. It moves from state to state on each clock tick, outputting the correct control signals for the datapath at each state.
+
+**1. Define the States:**
+Your FSM will cycle through these general states for every instruction.
+
+*   `STATE_FETCH_1`: Put the PC value onto the `pRAM` address bus.
+*   `STATE_FETCH_2`: Load the data from `pRAM` into the IR. Increment the PC.
+*   `STATE_DECODE`: The main branching state. The FSM inputs the 6-bit opcode from the IR. Based on the opcode, it decides which execution state to go to next.
+*   `STATE_EXECUTE_...`: A set of states for carrying out instructions.
+
+**2. Example Walkthrough: `accA ← accA + accB` (Opcode: 100000)**
+
+Let's trace the FSM and the control signals it generates:
+
+*   **`STATE_FETCH_1`**
+    *   *Action:* Get instruction from pRAM.
+    *   *Control Signals:* `PC_out_enable=1`, `pRAM_read=1`. All other signals are 0.
+    *   *Next State:* `STATE_FETCH_2`
+
+*   **`STATE_FETCH_2`**
+    *   *Action:* Store instruction in IR, increment PC.
+    *   *Control Signals:* `IR_write_enable=1`, `PC_increment=1`.
+    *   *Next State:* `STATE_DECODE`
+
+*   **`STATE_DECODE`**
+    *   *Action:* Read opcode (`100000`).
+    *   *Control Signals:* None are active. The FSM just uses the opcode to decide the next state.
+    *   *Next State:* `STATE_EXEC_ADD` (a state we've defined for this operation).
+
+*   **`STATE_EXEC_ADD`**
+    *   *Action:* Perform `accA + accB` and store the result in `accA`.
+    *   *Control Signals:*
+        *   `ALU_InputA_Mux_Select = accA`
+        *   `ALU_InputB_Mux_Select = accB`
+        *   `ALUOp = ADD` (tells the ALU to perform addition)
+        *   `Reg_Write_Mux_Select = ALU_Output`
+        *   `accA_Write_Enable = 1`
+    *   *Next State:* `STATE_FETCH_1` (to begin the next instruction cycle).
+
+**3. Implementing the FSM in "Digital":**
+
+You can build this FSM using state registers and combinational logic (a "hardwired" approach). You'll have a state register that holds the current state number. Logic gates (or a ROM) will look at the current state and the opcode to determine (a) the control signals for this cycle and (b) the next state to load into the register.
+
+---
+
+## Phase 5: Integration and Testing
+
+*   **Build Incrementally:** Do not try to build everything at once. Build and test the ALU. Then build the register file and test writing/reading from it. Then combine them. Add the fetch logic last.
+*   **Use the Testcase File:** The `Testcase template 2568.xlsx` and the `Testcase` component in "Digital" are your best friends. They allow you to simulate the circuit by specifying the exact value of every input (`M`, `N`, `reset`, `start`, etc.) on every single clock tick.
+*   **Debugging:** When a test fails, go to the clock cycle where the `output` is wrong. Work backward from the `output` signal. Why is it wrong? Was the value in `rRAM` incorrect? If so, why? Was the ALU result that was stored there wrong? Or was the wrong value stored? This process of tracing signals back from the point of error is the key to debugging hardware designs.
+
+## Generalizing These Concepts for Other Projects
+
+The process we just walked through is fundamental to digital design and computer architecture. If you have a different project, the steps are the same:
+
+1.  **Analyze the ISA:** This is always the starting point. The instruction format, opcodes, and addressing modes dictate *everything* else. How many registers do you need? What functions must the ALU have? How does memory need to be accessed? The ISA is your specification.
+2.  **Design the Datapath:** Sketch a block diagram showing the necessary components (registers, ALU, memory) and the data pathways between them. Use MUXs liberally to control the flow of data. For every piece of data that needs to be written somewhere, ask: "What are all the possible sources for this data?" The answer defines the inputs to your MUX.
+3.  **Design the Control Unit:** Create an FSM that implements the instruction cycle (Fetch, Decode, Execute). For each instruction in the ISA, map out the sequence of states and the specific control signals that must be activated in each state to make the datapath perform the required action.
+
+By breaking the problem down into these distinct phases—understanding the spec, designing the datapath, building the components, and creating the control logic—you can tackle any CPU design project, no matter the specific requirements. Good luck

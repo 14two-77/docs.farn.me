@@ -30,7 +30,7 @@ const sidebars: SidebarsConfig = {
     {
       type: "category",
       label: "Digital Computer Logic",
-      items: ["dcl/quiz3"],
+      items: ["dcl/quiz3_2024","dcl/gpt_abb","dcl/notebook_abb","dcl/notebook_sum","dcl/final_project_asm","dcl/final_project_suggestion"],
     },
   ],
 };

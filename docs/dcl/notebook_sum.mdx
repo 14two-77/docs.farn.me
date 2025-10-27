@@ -1,0 +1,136 @@
+---
+sidebar_position: 4
+---
+
+# NotebookLM Summaries
+
+### **Part 1: Digital Logic Fundamentals**
+
+This is the foundation. Without this, the architecture concepts won't make sense.
+
+#### **Topic 1: Combinational Logic**
+
+**What is it?** A circuit whose output is determined *only* by its current inputs. It has no memory. Think of a simple calculator: you type `2+3`, it shows `5`. It doesn't remember what you did before.
+
+**Key Concepts & Exam Questions:**
+
+*   **Boolean Algebra & Canonical Forms (Q27):**
+    *   Any logic function can be expressed in two standard (canonical) forms.
+    *   **Sum of Products (SoP):** An OR of AND terms. Each AND term is a **minterm** (m). `F(A,B,C) = A'BC' + ABC`. The minterm `A'BC'` corresponds to the input `010`.
+    *   **Product of Sums (PoS):** An AND of OR terms. Each OR term is a **maxterm** (M). `F(A,B,C) = (A+B+C) * (A'+B'+C)`. The maxterm `(A+B+C)` corresponds to the input `000`.
+    *   **How to convert `AB' + A'C` to SoP:**
+        1.  Expand each term to include all variables:
+        2.  `AB'` becomes `AB'(C + C') = AB'C + AB'C'`.
+        3.  `A'C` becomes `A'C(B + B') = A'BC + A'B'C`.
+        4.  Combine them: `F = AB'C + AB'C' + A'BC + A'B'C`.
+        5.  These correspond to minterms m5, m4, m3, and m1. So the answer is `sum(1, 3, 4, 5)`.
+        6.  The PoS form would be the product of all the *missing* maxterms: `product(0, 2, 6, 7)`.
+
+*   **Basic Logic Gates (Q22):**
+    *   You need to know the basic gates. A **half adder** adds two single bits. The `Sum` is `A XOR B`, and the `Carry` is `A AND B`. So, the statement in Q22 is correct.
+
+*   **Multiplexers (MUX) (Q10):**
+    *   A MUX is a digital switch. It selects one of `2^N` data inputs to pass to a single output, using `N` select lines.
+    *   To build a 32:1 MUX, you need `log2(32) = 5` select lines.
+    *   The question asks how to build one from smaller MUXes. The correct approach is to use two 16:1 MUXes (which handle 16 inputs each) and then use one 2:1 MUX to select between the outputs of the two 16:1 MUXes.
+
+*   **Hazard-Free Design (Q20):**
+    *   A **hazard** is a temporary, unwanted glitch in a circuit's output. A **static-1 hazard** happens when an output that should stay at `1` briefly drops to `0`.
+    *   This is solved by ensuring in your K-map that every pair of adjacent `1`s is covered by at least one common product term. This often means adding a redundant group.
+    *   **For Q20:** A has 2 votes, B, C, D have 1 each. A majority needs 3+ votes. The winning combinations are `AB`, `AC`, `AD` (if A votes yes) or `BCD` (if A votes no). The Boolean expression is `F = AB + AC + AD + BCD`. This expression is already hazard-free.
+
+#### **Topic 2: Sequential Logic**
+
+**What is it?** A circuit whose output depends on current inputs AND its previous state. It has memory. Think of a TV remote's power button; its action (turn on vs. turn off) depends on the TV's current state.
+
+**Key Concepts & Exam Questions:**
+
+*   **FSM (Finite State Machine) (Q18):** This is the abstract model for all sequential circuits. It consists of states and transitions.
+*   **Mealy vs. Moore Machines (Q14):** A very common comparison question.
+    *   **Moore:** Output depends **only on the current state**.
+    *   **Mealy:** Output depends on **current state AND current inputs**.
+    *   This makes Mealy machines react faster, as the output can change as soon as the input changes, without waiting for the next clock edge. A Moore machine's output is stable for the whole clock cycle.
+
+*   **Counters (Q24):** This question asks you to trace the behavior of a synchronous counter. You need to look at the logic driving the D-input of each flip-flop. The output of a flip-flop on the next clock tick will be whatever is at its D-input just before the clock ticks.
+
+*   **Clock Skew (Q29):** A critical timing issue. In a large chip, the clock signal can't reach every flip-flop at the exact same instant. **Clock skew** is the difference in arrival time of the clock signal at different parts of the circuit. If the skew is too large, a flip-flop might latch the wrong data.
+
+---
+
+### **Part 2: Computer Architecture Principles**
+
+This is the heart of the course and the exam.
+
+#### **Topic 3: Performance Calculation**
+
+**What is it?** How we measure and compare how "fast" computers are.
+
+**Key Concepts & Exam Questions:**
+
+*   **The CPU Performance Equation (Q6, Q19, Q25):** This is the most important formula.
+    `CPU Time = Instruction Count (IC) x Cycles Per Instruction (CPI) x Cycle Time (T)`
+    *   **Cycle Time** is `1 / Clock Rate`.
+    *   **Q19 asks:** A single-cycle processor has `CPI = 1`. Its CPU time is `IC * 1 * 200ns`. A multi-cycle processor will be slower if its `IC * CPI_avg * Cycle_Time` is greater than the single-cycle time. For a given program, IC is the same, so you're just comparing `200ns` to `CPI_avg * Cycle_Time`. For option D, `9.0 * 25ns = 225ns`, which is slower.
+
+*   **Amdahl's Law (Q15):** This law tells you the maximum speedup you can get by improving only a part of a system.
+    `Overall Speedup = 1 / [ (1 - F_enhanced) + (F_enhanced / Speedup_enhanced) ]`
+    *   `F_enhanced` is the fraction of time the enhancement can be used.
+    *   **For Q15:**
+        *   Total time = 1.0. The "enhanced" parts are A (25%), B (30%). The "degraded" part is C (35%). The unaffected part is D (10%).
+        *   New Exec Time = `(0.25/2.0) + (0.30/3.0) + (0.35/0.8) + (0.10/Speedup_D)`
+        *   We want the Overall Speedup to be 1.25, which means `New Exec Time = 1 / 1.25 = 0.8`.
+        *   `0.8 = 0.125 + 0.1 + 0.4375 + (0.1 / Speedup_D)`.
+        *   Solving this gives you the required `Speedup_D`.
+
+*   **Performance Metrics (Q12):** When comparing performance *ratios* or speedups across different programs, **Geometric Mean** is the correct average to use. Arithmetic mean can be skewed by outliers.
+
+#### **Topic 4: Memory Hierarchy**
+
+**What is it?** A system of multiple levels of memory with different speeds and sizes, designed to bridge the huge speed gap between the fast CPU and slow main memory.
+
+**Key Concepts & Exam Questions:**
+
+*   **SRAM vs. DRAM (Q9):**
+    *   **SRAM** is faster, more expensive, less dense. Used for **Cache**.
+    *   **DRAM** is slower, cheaper, denser. Used for **Main Memory**.
+    *   Therefore, DRAM has a higher capacity per unit area (มีความจุต่อหน่วยมากกว่า).
+
+*   **Cache Memory (Q17, Q28):**
+    *   **Cache Organization:** A cache is organized into lines. The address is split into Tag, Index, and Offset.
+        *   **Offset:** Tells you where the data is within a block. `Block Size = 2^Offset_bits`.
+        *   **Index:** Tells you which line (or set) of the cache to look in. `Number of Sets = 2^Index_bits`.
+        *   **Tag:** The remaining bits, used to verify if you have a hit.
+    *   **For Q17:**
+        *   Block size = 32 bytes -> Offset = 5 bits (2^5=32).
+        *   Number of sets = 128 lines / 8-way associativity = 16 sets. -> Index = 4 bits (2^4=16).
+        *   Total address = 16 bits. Tag = 16 - 4 - 5 = 7 bits.
+        *   Cache size = 128 lines * 32 bytes/line = 4096 bytes = 4 KB.
+        *   Address `0x326A` = `0011 0010 0110 1010` in binary. The index bits are the 4 bits before the 5 offset bits. This is `0110`, which is 6 in decimal. So you check line 6.
+    *   **Write Policies (Q28):**
+        *   **Write-Through:** Write to both cache and main memory. Simple, but slow.
+        *   **Write-Back:** Write only to the cache. Write to main memory later when the block is replaced. Faster, but more complex. It's better for workloads with lots of writes to the same location, as you avoid many slow main memory writes.
+
+*   **Virtual Memory & TLB (Q3, Q23):**
+    *   Virtual memory gives each program its own address space. The **TLB (Translation Lookaside Buffer)** is a hardware cache for the page table, which stores the mappings from virtual to physical addresses. Its purpose is to make address translation fast. Without it, every memory access would require another memory access to the page table, making the system incredibly slow.
+
+*   **RAID (Q4):**
+    *   **RAID 1 (Mirroring)** provides the highest data safety by making an exact copy of the data on another disk. If one disk fails, the other can take over with no data loss.
+
+#### **Topic 5: ISA and Processor Architecture**
+
+**What is it?** The high-level design choices that define how a processor works.
+
+**Key Concepts & Exam Questions:**
+
+*   **Flynn's Taxonomy (Q8):**
+    *   **MISD (Multiple Instruction, Single Data)** is a rare architecture where multiple processing units operate on the same data stream, each executing independent instructions. This is a natural fit for **Fault-Tolerant systems**, as you can have multiple processors perform the same operation and vote on the result to detect errors.
+*   **Pipeline Hazards (Q1):**
+    *   **WAR (Write After Read)** is a hazard where an instruction wants to write to a location that a preceding, still-executing instruction is going to read. This hazard doesn't really happen in a simple 5-stage pipeline or a multi-cycle CPU because reads always happen early (in the Decode stage) and writes happen late (in the Write-Back stage). It becomes a problem in **SuperScalar** processors that can execute instructions out of order. A later instruction might complete its write before an earlier instruction has done its read. Therefore, a SuperScalar architecture is the most likely to suffer from WAR hazards.
+*   **Instruction Format Design (Q32):**
+    *   You have a 24-bit instruction.
+    *   **Registers (N):** You have 16 registers, so you need `log2(16) = 4` bits to specify one register.
+    *   **Opcode (M):** You have 20 instructions, so you need at least `log2(20)` bits. Since you can't have fractional bits, you round up. `2^4=16` (too small), `2^5=32`. So you need 5 bits for the opcode.
+    *   **Immediate (O):** The remaining bits are for the immediate value. `24 - 5 - 4 = 15` bits.
+    *   **Value of A:** Instructions are 24 bits long. If memory is byte-addressable, `A` would be 3 (bytes) to get to the next instruction. However, most systems have word-aligned instructions. If it's 32-bit aligned, `A` would be 4. Given the 24-bit instruction, it's likely 3.
+
+Good luck with your exam! Review these core topics, and you'll be well on your way to a great score.
