@@ -1,0 +1,330 @@
+---
+sidebar_position: 1
+---
+
+# Data Sci role in DGB project
+
+## Overview
+
+If your data science teammate is **completely new** to both software and data, and only has **3.5 weeks**, the right strategy isn’t to make him do “real ML.”
+Instead, you help him produce **visible, measurable, and realistic work** that looks professional on a resume — without being technically overwhelming.
+
+Let’s design a **practical plan that maximizes impact per effort.**
+
+---
+
+### 🗓️ Overview: 3.5-Week Data Science Roadmap
+
+| Week            | Focus                             | Goal                                                           |
+| --------------- | --------------------------------- | -------------------------------------------------------------- |
+| **Week 1**      | Learn foundations + get setup     | Understand project, learn basic tools, generate sample data    |
+| **Week 2**      | Build synthetic datasets & EDA    | Produce charts, basic stats, correlations                      |
+| **Week 3**      | Create simple analytics dashboard | Integrate with backend DB or CSV, visualize data interactively |
+| **Half Week 4** | Polish + present results          | Make it look professional for resume & GitHub                  |
+
+---
+
+### 🎯 Week 1: Setup & Basic Learning
+
+#### 🔧 Learning goals
+
+- Understand basic software dev flow: `git`, VS Code, Python, Docker (just enough)
+- Learn enough **Python + pandas + matplotlib**
+- Learn what **EDA (Exploratory Data Analysis)** means
+
+#### 🧰 Practice tasks
+
+1. Create `data/` folder in the monorepo
+
+   - Put notebook files inside (`/data/notebooks/`)
+
+2. Write a notebook: `generate_synthetic_transactions.ipynb`
+
+   - Simulate 500–2000 transaction records with columns like:
+
+     ```
+     user_id, amount, currency, transaction_type, status, timestamp
+     ```
+
+   - Add random distributions (normal, exponential, uniform)
+
+3. Save results as `.csv` or insert into PostgreSQL
+
+#### 📈 Resume impact (already usable)
+
+> “Generated synthetic financial transaction data for analytics in a simulated digital banking system.”
+
+---
+
+### 📊 Week 2: Data Exploration (EDA)
+
+#### 🧰 Tasks
+
+1. Load the synthetic CSV into a Jupyter notebook
+2. Use pandas & matplotlib to create plots:
+
+   - Deposits vs Withdraws per day
+   - Transaction volume trend
+   - User spending histogram
+   - Average balance per user
+
+3. Compute simple stats:
+
+   - Mean, median, max, min of transaction amounts
+   - Percentage of failed transactions
+
+4. Save all charts as `.png` into `/data/reports/`
+
+#### 🪄 Optional +1
+
+Add **correlation matrix** or **heatmap** (with seaborn). It looks great visually.
+
+#### 📄 Resume line
+
+> “Performed exploratory data analysis (EDA) on synthetic transaction data using pandas and matplotlib to uncover trends and anomalies.”
+
+---
+
+### 🖥️ Week 3: Analytics Dashboard (visual & resume-visible)
+
+#### Two options depending on skill & time:
+
+###### 🟢 **Easier: Streamlit app**
+
+- Build a simple Streamlit dashboard:
+
+  - Upload CSV or connect to PostgreSQL (read-only)
+  - Show summary metrics + charts (matplotlib or plotly)
+
+- Run locally at `localhost:8501`
+
+This looks professional and interactive fast.
+
+Example pages:
+
+- “Transaction Summary”
+- “Daily Volume Trend”
+- “Top Users by Transaction Count”
+
+**Tech stack:** Streamlit, pandas, matplotlib/plotly.
+
+###### 🟡 Harder (if they progress fast):
+
+- Build Grafana dashboard using Postgres connection from your database.
+- Create 2–3 panels visualizing transaction activity.
+
+---
+
+#### 📄 Resume line
+
+> “Developed interactive financial analytics dashboard using Streamlit to visualize synthetic ledger and transaction activity.”
+
+---
+
+### 🧑‍💻 Week 4 (Final 3–4 days): Polish & Document
+
+#### Deliverables:
+
+1. `/data/README.md`
+
+   - Describe: data generation, tools used, key insights
+
+2. Screenshots of charts or Streamlit dashboard
+3. One polished Jupyter Notebook with all work in clean markdown blocks
+4. If time: Add short presentation slide with 2–3 charts for GitHub README
+
+#### Resume summary:
+
+> **Data Analyst Intern (Simulated Project)** — Digital Banking
+> • Created and analyzed synthetic transaction data (1k+ records) simulating deposit, withdrawal, and transfer operations.
+> • Built interactive financial analytics dashboard using Streamlit and pandas.
+> • Conducted data exploration and visualization to identify trends and anomalies.
+
+---
+
+### 🧩 Folder structure
+
+Inside monorepo:
+
+```
+digital-banking/
+├── auth-service/
+├── account-service/
+├── ledger-service/
+├── data/
+│   ├── notebooks/
+│   │   ├── generate_data.ipynb
+│   │   ├── eda.ipynb
+│   ├── reports/
+│   │   ├── daily_volume.png
+│   │   ├── transaction_heatmap.png
+│   ├── app/
+│   │   ├── streamlit_app.py
+│   ├── requirements.txt
+│   └── README.md
+```
+
+---
+
+### 🧠 TL;DR: What he learns + gets for resume
+
+| Category      | Skill Learned                    | Resume Keyword                               |
+| ------------- | -------------------------------- | -------------------------------------------- |
+| Programming   | Python, Git, Docker              | `Python`, `pandas`, `matplotlib`             |
+| Data          | EDA, basic SQL                   | `Data analysis`, `EDA`, `SQL`                |
+| Visualization | Streamlit / matplotlib           | `Data visualization`, `Dashboard`            |
+| Software      | Integration with backend project | `Microservice`, `Digital banking simulation` |
+
+Even without ML, that’s **a complete data analyst–type project** under 4 weeks — and 100% resume-relevant.
+
+---
+
+## Detailed plan
+
+Goal: **produce one small but meaningful contribution** that fits naturally into your Go-based project and looks great on their resume.
+
+---
+
+## 🎯 Final Goal
+
+> **Build and document a data analytics module** that:
+>
+> 1. Collects and cleans mock user or system data from your backend (PostgreSQL).
+> 2. Generates useful insights (like user activity, record growth, etc.).
+> 3. Visualizes results (chart or dashboard).
+> 4. Produces a clear technical report or Jupyter notebook to show understanding.
+
+---
+
+## 🧭 Week-by-Week Plan (2 hrs/day)
+
+### **Week 1 — Foundations & Setup**
+
+**Goal:** Understand project + learn minimal Python, pandas, and SQL.
+
+**Day 1–2**
+
+- Read about project goals (you explain your backend: what data exists, why it matters).
+- Learn Python basics (variables, loops, lists, dicts).
+
+  - Resource: [Kaggle Python Course](https://www.kaggle.com/learn/python) (~4 hours total).
+
+**Day 3–4**
+
+- Learn pandas and Jupyter Notebook.
+
+  - Resource: [Kaggle Pandas Course](https://www.kaggle.com/learn/pandas)
+
+- Practice with small CSV datasets.
+
+**Day 5–7**
+
+- Learn SQL basics:
+
+  - SELECT, WHERE, GROUP BY, JOIN
+  - Tool: [Mode SQL Tutorial](https://mode.com/sql-tutorial/)
+
+- Connect Python → PostgreSQL with `psycopg2` or `SQLAlchemy`.
+
+⏱ _Expected output:_
+A notebook that loads a simple table from your project’s database (or mock DB) and shows a few queries.
+
+---
+
+### **Week 2 — Real Project Data Integration**
+
+**Goal:** Connect to your project’s PostgreSQL DB and explore its schema.
+
+**Day 8–9**
+
+- With your help, inspect your database schema (`users`, `activities`, etc.).
+- Learn how to use environment variables safely (no passwords in code).
+
+**Day 10–11**
+
+- Write Python scripts or a notebook to extract data (e.g., user signup logs or activity records).
+- Clean it using pandas (handle nulls, dates, etc.).
+
+**Day 12–14**
+
+- Generate simple metrics:
+
+  - Total users
+  - Monthly growth
+  - Activity count per region or church (for your HRM or ClinicChip project)
+
+- Log results to console and save cleaned data as CSV.
+
+⏱ _Expected output:_
+A notebook that queries and summarizes your real or mock data.
+
+---
+
+### **Week 3 — Insights & Visualization**
+
+**Goal:** Turn data into insight and present it clearly.
+
+**Day 15–18**
+
+- Learn `matplotlib` or `plotly` for visualization.
+- Plot charts like:
+
+  - User growth over time
+  - Active vs inactive users
+  - Most common activity types
+
+**Day 19–21**
+
+- Add meaningful text: interpret graphs, explain trends.
+- Add one or two “business logic insights,” e.g.:
+
+  - “Activity participation drops after week 8 — may indicate engagement issues.”
+  - “Most users registered from X region.”
+
+⏱ _Expected output:_
+A clean, labeled chart with short analysis text.
+
+---
+
+### **Half Week (Days 22–25) — Polish & Resume Impact**
+
+**Goal:** Package results professionally.
+
+**Day 22–23**
+
+- Clean notebook (titles, sections, comments).
+- Export to PDF or HTML report.
+
+**Day 24–25**
+
+- Write short README or summary:
+
+  - Project goal
+  - Data used
+  - Techniques applied
+  - Key findings
+  - What could be improved with real data
+
+---
+
+## 🧾 Deliverables
+
+At the end of 3.5 weeks:
+
+1. `analysis.ipynb` — Clean, documented Jupyter notebook.
+2. `README.md` — Short summary of what was done.
+3. Optional `charts/` folder with exported images.
+4. (Optional) CSV/JSON cleaned dataset.
+
+---
+
+## 💼 Resume Line Example
+
+> **Data Analytics Intern (Project Collaboration)** — _Built data analysis pipeline for internal HRM-like SaaS._
+>
+> - Connected PostgreSQL database to Python (pandas, SQLAlchemy).
+> - Analyzed user activity and growth patterns; visualized insights with Plotly.
+> - Delivered clean, reproducible notebook and dashboard for system monitoring.
+
+---
+

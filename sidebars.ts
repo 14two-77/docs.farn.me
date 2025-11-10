@@ -32,6 +32,11 @@ const sidebars: SidebarsConfig = {
       label: "Digital Computer Logic",
       items: ["dcl/quiz3_2024","dcl/gpt_abb","dcl/notebook_abb","dcl/notebook_sum","dcl/final_project_asm","dcl/final_project_suggestion"],
     },
+    {
+      type: "category",
+      label: "Shared Resources",
+      items: ["share/data-in-dgb"],
+    }
   ],
 };
 
