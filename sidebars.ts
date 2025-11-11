@@ -35,7 +35,7 @@ const sidebars: SidebarsConfig = {
     {
       type: "category",
       label: "Shared Resources",
-      items: ["share/data-in-dgb"],
+      items: ["share/data-in-dgb", "share/cybersec-in-dgb"],
     }
   ],
 };

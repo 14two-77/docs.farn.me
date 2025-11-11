@@ -1,0 +1,140 @@
+---
+sidebar_position: 1
+---
+
+# Cybersecurity role in DGB project
+
+
+## 🧭 Strategic Focus
+
+They should aim to:
+
+> **Lay down the project’s security foundation**, so that when development progresses, security practices are already embedded in architecture, CI/CD, and configuration.
+
+---
+
+## 🧩 Realistic Roles & Tasks (No full app needed)
+
+### 1. **Security Review of Design & Code (Static Stage)**
+
+**Timeframe:** Can start immediately.
+**Output:** Threat model and recommendations document.
+
+**Tasks:**
+
+* Review current folder structure and Go modules (auth, db, config, etc.).
+* Create a **threat model diagram** — e.g. using [draw.io](https://app.diagrams.net) or markdown — that describes:
+
+  * Data flow between services.
+  * Attack surfaces (JWT, DB, MinIO, Traefik, etc.).
+  * Possible mitigations (input validation, least privilege, etc.).
+* Identify potential issues:
+
+  * JWT misuse (e.g., missing audience/issuer checks).
+  * SQL injection spots (GORM queries).
+  * Logging sensitive data.
+
+**Resume impact:**
+
+> “Performed threat modeling and code review for early-stage Go microservice architecture; identified and documented security hardening strategies (JWT validation, database access control, and secret handling).”
+
+---
+
+### 2. **Secure Configuration & Secret Management**
+
+**Timeframe:** Can be done while system grows.
+**Output:** `.env.example`, security guidelines, and setup scripts.
+
+**Tasks:**
+
+* Audit `.env` structure — remove secrets from commits.
+* Write a `SECURITY.md` explaining how to handle secrets in dev and prod.
+* Introduce or document secret vault integration (e.g., **Infisical**, **Doppler**, **Vault**, or even a basic `.envrc` strategy).
+* Verify Docker/Podman container security best practices:
+
+  * Avoid running as root.
+  * Limit network exposure (Traefik rules).
+
+**Resume impact:**
+
+> “Implemented secret management strategy and secure container configuration for Go-based microservices, using least-privilege and separation principles.”
+
+---
+
+### 3. **Automated Security Scanning (CI/CD Integration)**
+
+**Timeframe:** Once basic CI exists.
+**Output:** CI pipeline steps + documentation.
+
+**Tasks:**
+
+* Add scanning tools like:
+
+  * `gosec` for Go code.
+  * `trivy` for Docker image scanning.
+  * `npm audit` or `pnpm audit` for front-end packages.
+* Write a small report after running each.
+* Optionally configure GitHub Actions or simple shell scripts.
+
+**Resume impact:**
+
+> “Integrated automated security scanning (gosec, trivy) into continuous integration pipeline to ensure static code and dependency safety.”
+
+---
+
+### 4. **Security Awareness Documentation**
+
+**Timeframe:** Any time.
+**Output:** Short wiki or markdown doc.
+
+**Tasks:**
+
+* Write `SECURITY_GUIDELINES.md` for the team, including:
+
+  * How to handle credentials.
+  * How to review PRs securely.
+  * Logging dos and don’ts (avoid PII).
+* Help define a **password policy** or **token expiration strategy**.
+
+**Resume impact:**
+
+> “Authored internal security guidelines and implemented consistent secure logging and token lifecycle policies across backend services.”
+
+---
+
+### 5. **Penetration Simulation (Optional, Later Stage)**
+
+**Timeframe:** Once endpoints exist (mock data OK).
+**Output:** Vulnerability report.
+
+**Tasks:**
+
+* Use tools like **OWASP ZAP** or **Burp Suite** against local endpoints.
+* Simulate bad JWTs, SQLi attempts, or unauthorized access.
+* Report findings with severity and fixes.
+
+**Resume impact:**
+
+> “Conducted penetration testing of internal API endpoints, discovering and remediating authentication bypass and data leakage risks.”
+
+---
+
+## 🗓️ Example Weekly Plan (2 hours/day)
+
+| Week | Focus                                    | Example Outputs                                          |
+| ---- | ---------------------------------------- | -------------------------------------------------------- |
+| 1    | Learn OWASP Top 10 + review current code | `THREAT_MODEL.md`, first findings                        |
+| 2    | Secret handling + CI scanning setup      | `.env.example`, `SECURITY.md`, `trivy` + `gosec` reports |
+| 3    | Improve JWT & DB security; write docs    | “JWT hardening checklist”, secure GORM usage notes       |
+| 4    | Optional: run ZAP or test endpoints      | vulnerability summary & improvements doc                 |
+
+---
+
+## ✅ Summary
+
+Even if the backend is **not finished**, the cybersecurity student can:
+
+* Do **static reviews** and write **security policy docs**.
+* Set up **automation and secret management** for when real code runs.
+* Produce **real, demonstrable outputs** that recruiters value.
+
