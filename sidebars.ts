@@ -36,6 +36,11 @@ const sidebars: SidebarsConfig = {
       type: "category",
       label: "Shared Resources",
       items: ["share/data-in-dgb", "share/cybersec-in-dgb"],
+    },
+    {
+      type: "category",
+      label: "CEDT Internship 2026 Resources",
+      items: ["internship/job-description", ],
     }
   ],
 };
