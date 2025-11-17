@@ -1,0 +1,341 @@
+---
+sidebar_position: 3
+---
+
+Here is a guide on how to use the `lestrrat-go/jwx/v3` package to create an OAuth 2.0 password grant type service, along with an explanation of JWT and related terms.
+
+### Understanding JWT and Related Terms
+
+Before diving into the code, it's important to understand the terminology used in the JSON Object Signing and Encryption (JOSE) standards:
+
+*   **JWT (JSON Web Token)**: A compact, URL-safe means of representing claims to be transferred between two parties. A JWT is a string consisting of three parts, separated by dots (`.`), which are:
+    *   **Header**: Contains metadata about the token, such as the signing algorithm.
+    *   **Payload**: Contains the claims, which are statements about an entity (e.g., a user) and additional data.
+    *   **Signature**: Used to verify that the sender of the JWT is who it says it is and to ensure that the message wasn't changed along the way.
+
+*   **JWS (JSON Web Signature)**: A standard for signing arbitrary data, not just JWTs. A JWS also consists of three parts: the JOSE Header, the JWS Payload, and the JWS Signature.
+
+*   **JWA (JSON Web Algorithm)**: A standard that defines the cryptographic algorithms used for signing and encryption in JWS and JWE.
+
+*   **JWK (JSON Web Key)**: A JSON data structure that represents a cryptographic key. A JWK can represent a symmetric key or an asymmetric key pair (public and private key).
+
+*   **JWKS (JSON Web Key Set)**: A JSON data structure that represents a set of JWKs. This is often exposed as a `/.well-known/jwks.json` endpoint, allowing clients to fetch the public keys needed to verify JWTs.
+
+*   **JWE (JSON Web Encryption)**: A standard for encrypting data. While not directly used in the password grant flow for signing tokens, it's part of the broader JOSE framework for protecting the confidentiality of data.
+
+### OAuth 2.0 Password Grant Flow with JWT
+
+The OAuth 2.0 password grant is a flow where a user provides their username and password directly to a client application, which then sends them to an authorization server. The server, if the credentials are valid, returns an access token (in our case, a JWT).
+
+Here's a high-level overview of the process:
+
+1.  **User Authentication**: The user provides their credentials (e.g., username and password) to the client.
+2.  **Token Request**: The client sends a request to the authorization server's token endpoint with the user's credentials.
+3.  **Token Issuance (Auth Service)**:
+    *   The authorization server validates the credentials.
+    *   If valid, it generates a JWT, signs it with a private key, and returns the JWT to the client.
+4.  **Resource Access**: The client stores the JWT and sends it in the `Authorization` header of subsequent requests to a resource server.
+5.  **Token Verification (Resource Service)**:
+    *   The resource server receives the JWT and verifies its signature using the corresponding public key.
+    *   If the signature is valid, the resource server can trust the claims in the JWT and grant access to the requested resource.
+
+### Implementation with `lestrrat-go/jwx/v3`, Fiber, and Gorm
+
+Here is a step-by-step guide to building the authentication service and a resource service.
+
+#### 1. Project Setup
+
+First, make sure you have the necessary dependencies:
+
+```bash
+go get -u github.com/gofiber/fiber/v2
+go get -u github.com/lestrrat-go/jwx/v3
+go get -u gorm.io/gorm
+go get -u gorm.io/driver/postgres
+go get -u github.com/google/uuid
+```
+
+#### 2. Generating RSA Keys
+
+You'll need an RSA private and public key pair. You can generate them using OpenSSL:
+
+```bash
+openssl genpkey -algorithm RSA -out private.pem -pkeyopt rsa_keygen_bits:2048
+openssl rsa -pubout -in private.pem -out public.pem
+```
+
+#### 3. Authentication Service (Issuing Tokens)
+
+The authentication service will have an endpoint that accepts user credentials, validates them, and issues a JWT.
+
+```go
+package main
+
+import (
+	"context"
+	"crypto/rsa"
+	"fmt"
+	"log"
+	"os"
+	"time"
+
+	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
+	"github.com/lestrrat-go/jwx/v3/jwa"
+	"github.com/lestrrat-go/jwx/v3/jwk"
+	"github.com/lestrrat-go/jwx/v3/jwt"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+)
+
+// User represents a user in the database
+type User struct {
+	ID       uuid.UUID `gorm:"type:uuid;primary_key;"`
+	Username string    `gorm:"uniqueIndex;not null"`
+	Password string    `gorm:"not null"`
+}
+
+// Global variables for the database and private key
+var (
+	db         *gorm.DB
+	privateKey *rsa.PrivateKey
+)
+
+func main() {
+	// Initialize the database connection
+	dsn := "host=localhost user=youruser password=yourpassword dbname=yourdb port=5432 sslmode=disable"
+	var err error
+	db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	if err != nil {
+		log.Fatal("failed to connect to database")
+	}
+
+	// Migrate the schema
+	db.AutoMigrate(&User{})
+
+	// Load the private key
+	privateKey, err = loadPrivateKey("private.pem")
+	if err != nil {
+		log.Fatalf("failed to load private key: %s", err)
+	}
+
+	// Create a new Fiber app
+	app := fiber.New()
+
+	// Define the login route
+	app.Post("/login", login)
+
+	// Start the server
+	log.Fatal(app.Listen(":3000"))
+}
+
+// login handles the user login and token issuance
+func login(c *fiber.Ctx) error {
+	// Parse the request body
+	var req struct {
+		Username string `json:"username"`
+		Password string `json:"password"`
+	}
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "cannot parse request"})
+	}
+
+	// Find the user in the database
+	var user User
+	if err := db.Where("username = ?", req.Username).First(&user).Error; err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "invalid credentials"})
+	}
+
+	// In a real application, you should compare hashed passwords.
+	// This is a simplified example.
+	if user.Password != req.Password {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "invalid credentials"})
+	}
+
+	// Create a new JWT token
+	tok, err := jwt.NewBuilder().
+		Issuer("auth-service").
+		Subject(user.ID.String()).
+		IssuedAt(time.Now()).
+		Expiration(time.Now().Add(time.Hour)).
+		Build()
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to build token"})
+	}
+
+	// Sign the token with the private key
+	signed, err := jwt.Sign(tok, jwt.WithKey(jwa.RS256, privateKey))
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to sign token"})
+	}
+
+	// Return the token
+	return c.JSON(fiber.Map{"token": string(signed)})
+}
+
+// loadPrivateKey loads an RSA private key from a PEM file
+func loadPrivateKey(path string) (*rsa.PrivateKey, error) {
+	keyData, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	key, err := jwk.ParseKey(keyData, jwk.WithPEM(true))
+	if err != nil {
+		return nil, err
+	}
+
+	var rawKey rsa.PrivateKey
+	if err := key.Raw(&rawKey); err != nil {
+		return nil, err
+	}
+
+	return &rawKey, nil
+}
+```
+
+**Explanation:**
+
+*   **`User` struct**: Defines the GORM model for the `users` table, using a UUID for the primary key.
+*   **`main` function**:
+    *   Initializes a connection to the PostgreSQL database.
+    *   Runs `AutoMigrate` to create the `users` table if it doesn't exist.
+    *   Loads the RSA private key from the `private.pem` file.
+    *   Creates a new Fiber app and defines the `/login` route.
+*   **`login` function**:
+    *   Parses the username and password from the request body.
+    *   Queries the database for a user with the given username.
+    *   **Note**: For simplicity, we're comparing plain-text passwords. In a real-world application, you should always hash passwords using a library like `bcrypt`.
+    *   Uses `jwt.NewBuilder` to create a new JWT with claims like issuer, subject (user ID), issued at, and expiration time.
+    *   Signs the token using `jwt.Sign` with the `RS256` algorithm and the loaded private key.
+    *   Returns the signed JWT to the client.
+*   **`loadPrivateKey` function**:
+    *   Reads the PEM-encoded private key from the specified file.
+    *   Uses `jwk.ParseKey` with the `jwk.WithPEM(true)` option to parse the key into a `jwk.Key`.
+    *   Extracts the raw `*rsa.PrivateKey` from the `jwk.Key`.
+
+#### 4. Resource Service (Verifying Tokens)
+
+The resource service will have a protected endpoint that requires a valid JWT for access.
+
+```go
+package main
+
+import (
+	"context"
+	"crypto/rsa"
+	"fmt"
+	"log"
+	"os"
+	"strings"
+
+	"github.com/gofiber/fiber/v2"
+	"github.com/lestrrat-go/jwx/v3/jwa"
+	"github.com/lestrrat-go/jwx/v3/jwk"
+	"github.com/lestrrat-go/jwx/v3/jwt"
+)
+
+var publicKey *rsa.PublicKey
+
+func main() {
+	// Load the public key
+	var err error
+	publicKey, err = loadPublicKey("public.pem")
+	if err != nil {
+		log.Fatalf("failed to load public key: %s", err)
+	}
+
+	// Create a new Fiber app
+	app := fiber.New()
+
+	// Define a protected route
+	app.Get("/protected", authMiddleware, protected)
+
+	// Start the server
+	log.Fatal(app.Listen(":8080"))
+}
+
+// authMiddleware is a middleware to verify the JWT
+func authMiddleware(c *fiber.Ctx) error {
+	// Get the token from the Authorization header
+	authHeader := c.Get("Authorization")
+	if authHeader == "" {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "missing or malformed JWT"})
+	}
+
+	// The header should be in the format "Bearer <token>"
+	parts := strings.Split(authHeader, " ")
+	if len(parts) != 2 || parts[0] != "Bearer" {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "missing or malformed JWT"})
+	}
+	tokenString := parts[1]
+
+	// Parse and verify the token
+	token, err := jwt.Parse([]byte(tokenString), jwt.WithKey(jwa.RS256, publicKey))
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "invalid or expired JWT"})
+	}
+
+	// You can also validate claims here
+	if err := jwt.Validate(token); err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "invalid claims"})
+	}
+    
+	// Store the token in the context for later use
+	c.Locals("user", token)
+
+
+	// If everything is ok, continue to the next middleware/handler
+	return c.Next()
+}
+
+// protected is a protected handler
+func protected(c *fiber.Ctx) error {
+	// Get the user from the context
+	userToken := c.Locals("user").(jwt.Token)
+
+
+	// You can now access the claims from the token
+	userID := userToken.Subject()
+
+	return c.JSON(fiber.Map{"message": fmt.Sprintf("Welcome user %s", userID)})
+}
+
+// loadPublicKey loads an RSA public key from a PEM file
+func loadPublicKey(path string) (*rsa.PublicKey, error) {
+	keyData, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	key, err := jwk.ParseKey(keyData, jwk.WithPEM(true))
+	if err != nil {
+		return nil, err
+	}
+
+	var rawKey rsa.PublicKey
+	if err := key.Raw(&rawKey); err != nil {
+		return nil, err
+	}
+
+	return &rawKey, nil
+}
+```
+
+**Explanation:**
+
+*   **`main` function**:
+    *   Loads the RSA public key from the `public.pem` file.
+    *   Creates a new Fiber app and defines a `/protected` route that uses the `authMiddleware`.
+*   **`authMiddleware` function**:
+    *   Extracts the JWT from the `Authorization` header.
+    *   Uses `jwt.Parse` with the `jwt.WithKey` option to verify the token's signature using the public key.
+    *   Calls `jwt.Validate` to validate the standard claims (e.g., expiration time).
+    *   If the token is valid, it's stored in the Fiber context using `c.Locals` and the request proceeds to the `protected` handler.
+*   **`protected` function**:
+    *   Retrieves the parsed token from the context.
+    *   Accesses the claims (e.g., the user ID from the `sub` claim).
+*   **`loadPublicKey` function**:
+    *   Similar to `loadPrivateKey`, but it parses the public key and extracts the raw `*rsa.PublicKey`.
+
+This example provides a solid foundation for building a JWT-based authentication system with the `lestrrat-go/jwx/v3` package. Remember to handle errors gracefully and implement proper password hashing in a production environment.
