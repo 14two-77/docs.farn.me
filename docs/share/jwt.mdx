@@ -2,28 +2,31 @@
 sidebar_position: 3
 ---
 
+# Fundamentals of implementing OAuth by JWT
+
 Here is a guide on how to use the `lestrrat-go/jwx/v3` package to create an OAuth 2.0 password grant type service, along with an explanation of JWT and related terms.
 
-### Understanding JWT and Related Terms
+## Understanding JWT and Related Terms
 
 Before diving into the code, it's important to understand the terminology used in the JSON Object Signing and Encryption (JOSE) standards:
 
-*   **JWT (JSON Web Token)**: A compact, URL-safe means of representing claims to be transferred between two parties. A JWT is a string consisting of three parts, separated by dots (`.`), which are:
-    *   **Header**: Contains metadata about the token, such as the signing algorithm.
-    *   **Payload**: Contains the claims, which are statements about an entity (e.g., a user) and additional data.
-    *   **Signature**: Used to verify that the sender of the JWT is who it says it is and to ensure that the message wasn't changed along the way.
+- **JWT (JSON Web Token)**: A compact, URL-safe means of representing claims to be transferred between two parties. A JWT is a string consisting of three parts, separated by dots (`.`), which are:
 
-*   **JWS (JSON Web Signature)**: A standard for signing arbitrary data, not just JWTs. A JWS also consists of three parts: the JOSE Header, the JWS Payload, and the JWS Signature.
+  - **Header**: Contains metadata about the token, such as the signing algorithm.
+  - **Payload**: Contains the claims, which are statements about an entity (e.g., a user) and additional data.
+  - **Signature**: Used to verify that the sender of the JWT is who it says it is and to ensure that the message wasn't changed along the way.
 
-*   **JWA (JSON Web Algorithm)**: A standard that defines the cryptographic algorithms used for signing and encryption in JWS and JWE.
+- **JWS (JSON Web Signature)**: A standard for signing arbitrary data, not just JWTs. A JWS also consists of three parts: the JOSE Header, the JWS Payload, and the JWS Signature.
 
-*   **JWK (JSON Web Key)**: A JSON data structure that represents a cryptographic key. A JWK can represent a symmetric key or an asymmetric key pair (public and private key).
+- **JWA (JSON Web Algorithm)**: A standard that defines the cryptographic algorithms used for signing and encryption in JWS and JWE.
 
-*   **JWKS (JSON Web Key Set)**: A JSON data structure that represents a set of JWKs. This is often exposed as a `/.well-known/jwks.json` endpoint, allowing clients to fetch the public keys needed to verify JWTs.
+- **JWK (JSON Web Key)**: A JSON data structure that represents a cryptographic key. A JWK can represent a symmetric key or an asymmetric key pair (public and private key).
 
-*   **JWE (JSON Web Encryption)**: A standard for encrypting data. While not directly used in the password grant flow for signing tokens, it's part of the broader JOSE framework for protecting the confidentiality of data.
+- **JWKS (JSON Web Key Set)**: A JSON data structure that represents a set of JWKs. This is often exposed as a `/.well-known/jwks.json` endpoint, allowing clients to fetch the public keys needed to verify JWTs.
 
-### OAuth 2.0 Password Grant Flow with JWT
+- **JWE (JSON Web Encryption)**: A standard for encrypting data. While not directly used in the password grant flow for signing tokens, it's part of the broader JOSE framework for protecting the confidentiality of data.
+
+## OAuth 2.0 Password Grant Flow with JWT
 
 The OAuth 2.0 password grant is a flow where a user provides their username and password directly to a client application, which then sends them to an authorization server. The server, if the credentials are valid, returns an access token (in our case, a JWT).
 
@@ -32,18 +35,18 @@ Here's a high-level overview of the process:
 1.  **User Authentication**: The user provides their credentials (e.g., username and password) to the client.
 2.  **Token Request**: The client sends a request to the authorization server's token endpoint with the user's credentials.
 3.  **Token Issuance (Auth Service)**:
-    *   The authorization server validates the credentials.
-    *   If valid, it generates a JWT, signs it with a private key, and returns the JWT to the client.
+    - The authorization server validates the credentials.
+    - If valid, it generates a JWT, signs it with a private key, and returns the JWT to the client.
 4.  **Resource Access**: The client stores the JWT and sends it in the `Authorization` header of subsequent requests to a resource server.
 5.  **Token Verification (Resource Service)**:
-    *   The resource server receives the JWT and verifies its signature using the corresponding public key.
-    *   If the signature is valid, the resource server can trust the claims in the JWT and grant access to the requested resource.
+    - The resource server receives the JWT and verifies its signature using the corresponding public key.
+    - If the signature is valid, the resource server can trust the claims in the JWT and grant access to the requested resource.
 
-### Implementation with `lestrrat-go/jwx/v3`, Fiber, and Gorm
+## Implementation with `lestrrat-go/jwx/v3`, Fiber, and Gorm
 
 Here is a step-by-step guide to building the authentication service and a resource service.
 
-#### 1. Project Setup
+### 1. Project Setup
 
 First, make sure you have the necessary dependencies:
 
@@ -55,7 +58,7 @@ go get -u gorm.io/driver/postgres
 go get -u github.com/google/uuid
 ```
 
-#### 2. Generating RSA Keys
+### 2. Generating RSA Keys
 
 You'll need an RSA private and public key pair. You can generate them using OpenSSL:
 
@@ -64,7 +67,7 @@ openssl genpkey -algorithm RSA -out private.pem -pkeyopt rsa_keygen_bits:2048
 openssl rsa -pubout -in private.pem -out public.pem
 ```
 
-#### 3. Authentication Service (Issuing Tokens)
+### 3. Authentication Service (Issuing Tokens)
 
 The authentication service will have an endpoint that accepts user credentials, validates them, and issues a JWT.
 
@@ -196,25 +199,25 @@ func loadPrivateKey(path string) (*rsa.PrivateKey, error) {
 
 **Explanation:**
 
-*   **`User` struct**: Defines the GORM model for the `users` table, using a UUID for the primary key.
-*   **`main` function**:
-    *   Initializes a connection to the PostgreSQL database.
-    *   Runs `AutoMigrate` to create the `users` table if it doesn't exist.
-    *   Loads the RSA private key from the `private.pem` file.
-    *   Creates a new Fiber app and defines the `/login` route.
-*   **`login` function**:
-    *   Parses the username and password from the request body.
-    *   Queries the database for a user with the given username.
-    *   **Note**: For simplicity, we're comparing plain-text passwords. In a real-world application, you should always hash passwords using a library like `bcrypt`.
-    *   Uses `jwt.NewBuilder` to create a new JWT with claims like issuer, subject (user ID), issued at, and expiration time.
-    *   Signs the token using `jwt.Sign` with the `RS256` algorithm and the loaded private key.
-    *   Returns the signed JWT to the client.
-*   **`loadPrivateKey` function**:
-    *   Reads the PEM-encoded private key from the specified file.
-    *   Uses `jwk.ParseKey` with the `jwk.WithPEM(true)` option to parse the key into a `jwk.Key`.
-    *   Extracts the raw `*rsa.PrivateKey` from the `jwk.Key`.
+- **`User` struct**: Defines the GORM model for the `users` table, using a UUID for the primary key.
+- **`main` function**:
+  - Initializes a connection to the PostgreSQL database.
+  - Runs `AutoMigrate` to create the `users` table if it doesn't exist.
+  - Loads the RSA private key from the `private.pem` file.
+  - Creates a new Fiber app and defines the `/login` route.
+- **`login` function**:
+  - Parses the username and password from the request body.
+  - Queries the database for a user with the given username.
+  - **Note**: For simplicity, we're comparing plain-text passwords. In a real-world application, you should always hash passwords using a library like `bcrypt`.
+  - Uses `jwt.NewBuilder` to create a new JWT with claims like issuer, subject (user ID), issued at, and expiration time.
+  - Signs the token using `jwt.Sign` with the `RS256` algorithm and the loaded private key.
+  - Returns the signed JWT to the client.
+- **`loadPrivateKey` function**:
+  - Reads the PEM-encoded private key from the specified file.
+  - Uses `jwk.ParseKey` with the `jwk.WithPEM(true)` option to parse the key into a `jwk.Key`.
+  - Extracts the raw `*rsa.PrivateKey` from the `jwk.Key`.
 
-#### 4. Resource Service (Verifying Tokens)
+### 4. Resource Service (Verifying Tokens)
 
 The resource service will have a protected endpoint that requires a valid JWT for access.
 
@@ -280,7 +283,7 @@ func authMiddleware(c *fiber.Ctx) error {
 	if err := jwt.Validate(token); err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "invalid claims"})
 	}
-    
+
 	// Store the token in the context for later use
 	c.Locals("user", token)
 
@@ -324,18 +327,161 @@ func loadPublicKey(path string) (*rsa.PublicKey, error) {
 
 **Explanation:**
 
-*   **`main` function**:
-    *   Loads the RSA public key from the `public.pem` file.
-    *   Creates a new Fiber app and defines a `/protected` route that uses the `authMiddleware`.
-*   **`authMiddleware` function**:
-    *   Extracts the JWT from the `Authorization` header.
-    *   Uses `jwt.Parse` with the `jwt.WithKey` option to verify the token's signature using the public key.
-    *   Calls `jwt.Validate` to validate the standard claims (e.g., expiration time).
-    *   If the token is valid, it's stored in the Fiber context using `c.Locals` and the request proceeds to the `protected` handler.
-*   **`protected` function**:
-    *   Retrieves the parsed token from the context.
-    *   Accesses the claims (e.g., the user ID from the `sub` claim).
-*   **`loadPublicKey` function**:
-    *   Similar to `loadPrivateKey`, but it parses the public key and extracts the raw `*rsa.PublicKey`.
+- **`main` function**:
+  - Loads the RSA public key from the `public.pem` file.
+  - Creates a new Fiber app and defines a `/protected` route that uses the `authMiddleware`.
+- **`authMiddleware` function**:
+  - Extracts the JWT from the `Authorization` header.
+  - Uses `jwt.Parse` with the `jwt.WithKey` option to verify the token's signature using the public key.
+  - Calls `jwt.Validate` to validate the standard claims (e.g., expiration time).
+  - If the token is valid, it's stored in the Fiber context using `c.Locals` and the request proceeds to the `protected` handler.
+- **`protected` function**:
+  - Retrieves the parsed token from the context.
+  - Accesses the claims (e.g., the user ID from the `sub` claim).
+- **`loadPublicKey` function**:
+  - Similar to `loadPrivateKey`, but it parses the public key and extracts the raw `*rsa.PublicKey`.
 
-This example provides a solid foundation for building a JWT-based authentication system with the `lestrrat-go/jwx/v3` package. Remember to handle errors gracefully and implement proper password hashing in a production environment.
+## Dig deep about JWT family
+
+Let's break down these concepts in much greater detail, focusing on their structure, context, and how they interact within the OAuth 2.0 password grant flow.
+
+### 1. JWT (JSON Web Token) - The "ID Card"
+
+Think of a JWT as a digitally signed ID card. It's a compact, self-contained package of information (claims) that can be securely transmitted between parties. Its security comes from the fact that it's digitally signed, so you can verify that it hasn't been tampered with and that it was issued by a trusted source.
+
+A JWT is just a long string, separated by two dots, like this: `xxxxx.yyyyy.zzzzz`
+
+- `xxxxx`: The **Header** (Base64Url encoded)
+- `yyyyy`: The **Payload** (Base64Url encoded)
+- `zzzzz`: The **Signature**
+
+Let's decode each part.
+
+---
+
+#### **Part 1: The Header (Metadata)**
+
+The header contains metadata about the token itself, primarily which algorithm was used to sign it.
+
+**Example Decoded Header (JSON):**
+
+```json
+{
+  "alg": "RS256",
+  "typ": "JWT",
+  "kid": "d1a5c6e8-7b2f-4c8d-8f9a-0b3c5d7e1f2g"
+}
+```
+
+- `"alg": "RS256"`: This is the **algorithm** used for the signature. It's a value defined in the **JWA** specification. `RS256` means RSA Signature Algorithm with SHA-256. This tells the verifier, "You need to use the RS256 algorithm to check my signature."
+- `"typ": "JWT"`: This declares the token's **type** as a JSON Web Token. It's mostly informational.
+- `"kid": "d1a5c6e8..."`: This is the **Key ID**. It's an optional but crucial field. Imagine the authentication server has multiple signing keys (for key rotation). The `kid` tells the resource server exactly _which_ key to use to verify this token. The resource server will look for a key with this ID in its **JWKS**.
+
+---
+
+#### **Part 2: The Payload (The Claims)**
+
+The payload contains the actual information (the "claims") you want to convey. These are statements about the user and the token itself.
+
+**Example Decoded Payload (JSON):**
+
+```json
+{
+  "iss": "https://auth.myservice.com",
+  "sub": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+  "exp": 1731903600,
+  "iat": 1731900000,
+  "jti": "abcdef123456",
+  "scope": "read:profile write:posts",
+  "name": "John Doe"
+}
+```
+
+There are three types of claims:
+
+- **Registered Claims**: These are standardized, recommended claims defined in the JWT spec.
+  - `iss` (Issuer): Who issued the token (your auth service).
+  - `sub` (Subject): The subject of the token, almost always the user's unique ID.
+  - `exp` (Expiration Time): The timestamp (in seconds since epoch) after which the token is invalid. This is critical for security.
+  - `iat` (Issued At): When the token was issued.
+  - `jti` (JWT ID): A unique identifier for the token, used to prevent replay attacks.
+- **Public Claims**: These are custom claims that are defined publicly. To avoid collisions, they should be named with a URI. This is less common.
+- **Private Claims**: These are custom claims created for your specific application. `scope` and `name` in the example above are private claims. You can add any data you need the resource server to know, like user roles, permissions, etc.
+
+---
+
+#### **Part 3: The Signature (The Seal of Authenticity)**
+
+The signature is what makes the JWT secure. It's created by taking the encoded header, the encoded payload, a secret (for symmetric algorithms like HS256) or a private key (for asymmetric algorithms like RS256), and signing them with the algorithm specified in the header.
+
+**How it's created (for RS256):**
+
+`RS256( base64UrlEncode(header) + "." + base64UrlEncode(payload), privateKey )`
+
+**How it provides security:**
+
+1.  **Integrity**: If anyone tries to change the payload (e.g., changing the `"sub"` to impersonate another user), the signature will no longer be valid. When the resource server tries to verify it with the public key, the check will fail.
+2.  **Authenticity**: Because the signature is created with a private key known only to the auth service, the resource server can be sure that the token was genuinely issued by that service when it successfully verifies the signature with the corresponding public key.
+
+### 2. JWS (JSON Web Signature) - The General-Purpose Signing Format
+
+**Context**: A JWT is actually just a specific _type_ of JWS. JWS is the broader standard for signing any piece of data and representing it in a compact, URL-safe string.
+
+- **How it relates to JWT**: A JWT is a JWS where the payload _must_ be a JSON object of claims. A JWS, however, can have _any_ payload. You could, for example, sign a plain text string or a binary file's hash using JWS.
+- **Flow**: The structure and signing process are identical to a JWT. The key difference is the content of the payload. For our OAuth use case, we are exclusively interested in the JWT form of JWS.
+
+### 3. JWA (JSON Web Algorithm) - The Dictionary of Algorithms
+
+**Context**: JWA isn't a technology you "use" directly; it's a specification that defines the names of the cryptographic algorithms. It's a shared vocabulary.
+
+- **How it relates**: When the JWT header says `"alg": "RS256"`, both the issuer and the verifier know this means "RSASSA-PKCS1-v1_5 using SHA-256" because "RS256" is defined in the JWA spec. This prevents ambiguity.
+- **Examples**:
+  - `HS256` (HMAC using SHA-256): Symmetric, requires a single shared secret. Faster but less secure if the secret is compromised, as anyone with the secret can both create and verify tokens.
+  - `RS256` (RSA with SHA-256): Asymmetric, uses a private key to sign and a public key to verify. This is the **recommended approach for your use case**. Your auth service keeps the private key totally secret, and you can freely distribute the public key to any resource service that needs to verify tokens.
+
+### 4. JWK & JWKS (JSON Web Key / Key Set) - The Standard for Publishing Keys
+
+**Context**: The resource server needs the public key to verify JWTs. How do you get it there? You could copy the `public.pem` file to every service, but that's a manual process and a nightmare for key rotation. JWK is a standard JSON format for representing a key. JWKS is a standard format for a set of keys.
+
+- **How it relates**: The auth service exposes a public URL (e.g., `https://auth.myservice.com/.well-known/jwks.json`). This URL returns a JWKS document. The resource service can fetch this document to get the public keys it needs.
+
+#### **Example JWK (inside a JWKS):**
+
+This is what an RSA public key looks like in JWK format.
+
+```json
+{
+  "kty": "RSA",
+  "use": "sig",
+  "kid": "d1a5c6e8-7b2f-4c8d-8f9a-0b3c5d7e1f2g",
+  "alg": "RS256",
+  "n": "vTq8v_...",
+  "e": "AQAB"
+}
+```
+
+- `kty`: Key Type ("RSA").
+- `use`: Key Use ("sig" for verifying signatures).
+- `kid`: **Key ID**. This is how the resource server matches the key to the token.
+- `n`, `e`: The modulus and exponent of the RSA public key.
+
+#### **Example Flow using JWKS:**
+
+1.  A client sends a JWT to your resource service. The JWT header has `"kid": "d1a5c6e8-..."`.
+2.  The resource service sees this JWT for the first time. It doesn't know the key.
+3.  The resource service makes a `GET` request to the auth service's public `/.well-known/jwks.json` endpoint.
+4.  The auth service returns a JWKS document containing an array of public keys in JWK format.
+5.  The resource service parses the JSON and looks for the key in the array where `"kid"` matches `"d1a5c6e8-..."`.
+6.  It finds the matching JWK, extracts the public key components (`n`, `e`), and uses them to verify the JWT's signature.
+7.  To improve performance, the resource service **caches** this JWKS for a set period (e.g., 1 hour). For subsequent requests with the same `kid`, it uses the cached key without needing to fetch the URL again.
+
+This flow makes key rotation seamless. When you want to rotate keys, you simply generate a new key pair on the auth server, add its public JWK to the JWKS endpoint with a new `kid`, and start signing new JWTs with the new private key and `kid`. Old tokens can still be verified with the old key (which remains in the JWKS for a while), and new tokens will be verified with the new key.
+
+### 5. JWE (JSON Web Encryption) - The "Sealed Envelope"
+
+**Context**: JWS/JWT is about **verifying** the sender (signing), not about **hiding** the content. The payload of a JWT is just Base64Url encoded, not encrypted. Anyone who intercepts the token can read the claims.
+
+JWE is for confidentiality. It's the standard for encrypting content.
+
+- **How it relates**: You could potentially wrap a JWT inside a JWE if you need to both sign _and_ encrypt the claims. This is called a nested JWT.
+- **Is it needed for your password grant flow?**: **No.** For the access token, the resource server _needs_ to read the claims (`sub`, `scope`, etc.). The token is sent over a secure channel (HTTPS), and the information inside it (like a user ID) is generally not considered secret. The security comes from the signature, which prevents tampering. JWE would add unnecessary complexity and performance overhead.
