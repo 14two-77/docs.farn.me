@@ -30,7 +30,14 @@ const sidebars: SidebarsConfig = {
     {
       type: "category",
       label: "Digital Computer Logic",
-      items: ["dcl/quiz3_2024","dcl/gpt_abb","dcl/notebook_abb","dcl/notebook_sum","dcl/final_project_asm","dcl/final_project_suggestion"],
+      items: [
+        "dcl/quiz3_2024",
+        "dcl/gpt_abb",
+        "dcl/notebook_abb",
+        "dcl/notebook_sum",
+        "dcl/final_project_asm",
+        "dcl/final_project_suggestion",
+      ],
     },
     {
       type: "category",
@@ -40,8 +47,13 @@ const sidebars: SidebarsConfig = {
     {
       type: "category",
       label: "CEDT Internship 2026 Resources",
-      items: ["internship/job-description", ],
-    }
+      items: ["internship/job-description"],
+    },
+    {
+      type: "category",
+      label: "Data Structures & Algorithms",
+      items: ["dsa/dsa67", "dsa/cheatsheet"],
+    },
   ],
 };
 

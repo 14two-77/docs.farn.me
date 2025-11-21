@@ -1,0 +1,144 @@
+---
+sidebar_position: 1
+---
+
+# DSA Mid-term Cheat Sheet
+
+### 1. Big-O & Time Limits
+**Rule of Thumb:** A standard grader handles $\approx 10^8$ operations per second.
+
+| N Size | Acceptable Complexity | Typical Algo |
+| :--- | :--- | :--- |
+| $10^6$ - $10^7$ | $O(N)$ or $O(N \log N)$ | Sort, Set/Map insert, Loop |
+| $10^5$ | $O(N \log N)$ or $O(N)$ | Sort, Heap, BST |
+| $2000$ - $5000$ | $O(N^2)$ | Nested loops, naive array ops |
+| $500$ | $O(N^3)$ | Matrix multiplication, Floyd-Warshall |
+| $20$ | $O(2^N)$ | Recursion subsets |
+
+---
+
+### 2. Custom Implementation Internals (`CP::`)
+
+#### **A. Vector (`CP::vector`)**
+*   **Internals:** `T* mData`, `size_t mSize`, `size_t mCap`.
+*   **Iterator:** It is just a pointer (`T*`).
+    *   `begin()` $\to$ `mData`
+    *   `end()` $\to$ `mData + mSize`
+*   **Pointer Arithmetic:**
+    *   `it + n` jumps $n$ blocks forward.
+    *   `it - begin()` gives the **index** (integer) of the element.
+    *   `*it` gives the value.
+
+#### **B. Linked List (`CP::list`) - Circular Doubly Linked**
+*   **Internals:** `node* mHeader` (Sentinel/Dummy node), `size_t mSize`.
+*   **Empty List:** `mHeader->next == mHeader` and `mHeader->prev == mHeader`.
+*   **Iterating:**
+    ```cpp
+    for(auto it = begin(); it != end(); it++) { ... }
+    // Internal loop:
+    node* p = mHeader->next;
+    while(p != mHeader) {
+        // do something with p->data
+        p = p->next;
+    }
+    ```
+*   **Inserting Node `N` between `A` and `B`:**
+    1.  `N->prev = A;`
+    2.  `N->next = B;`
+    3.  `A->next = N;`
+    4.  `B->prev = N;`
+*   **Deleting Node `N` (between `A` and `B`):**
+    1.  `A->next = B;`
+    2.  `B->prev = A;`
+    3.  `delete N;`
+
+#### **C. Binary Search Tree (`CP::map_bst`)**
+*   **Internals:** `node* mRoot`, `CompareT mLess`.
+*   **BST Property:**
+    *   Left Subtree values $<$ Node value
+    *   Right Subtree values $>$ Node value
+*   **Node Structure:** `data` (usually `pair<Key,Val>`), `left`, `right`, `parent`.
+*   **Recursion Template:**
+    ```cpp
+    void process(node* n) {
+        if (n == NULL) return; // Base case
+        process(n->left);      // Recurse Left
+        // ... Logic here ...  // Process Node
+        process(n->right);     // Recurse Right
+    }
+    ```
+*   **Height/Depth Logic:**
+    *   Height of node = $1 + \max(\text{height}(left), \text{height}(right))$
+    *   Height of NULL = $-1$.
+
+#### **D. Priority Queue / Heap (`CP::priority_queue`)**
+*   **Structure:** Array-based complete binary tree.
+*   **Indices (0-based):**
+    *   Node $i$
+    *   Parent: $(i-1) / 2$
+    *   Left Child: $2i + 1$
+    *   Right Child: $2i + 2$
+*   **Max Heap Property:** `mData[parent] >= mData[child]`
+*   **Push:** Add to end (`mSize++`), then **FixUp** (swap with parent until correct).
+*   **Pop:** Move last element to root, `mSize--`, then **FixDown** (swap with *larger* child until correct).
+
+---
+
+### 3. STL Cheat Sheet (Using Standard Library)
+
+#### **`std::vector<T>`**
+*   `v.push_back(val)`: $O(1)$ amortized.
+*   `v.insert(it, val)`: $O(N)$ (slow, shifts elements).
+*   `v.erase(it)`: $O(N)$ (slow, shifts elements).
+*   `v.resize(n)`: Changes size, default initializes new elements.
+
+#### **`std::pair<T1, T2>`**
+*   Access: `p.first`, `p.second`.
+*   Comparison: Compares `first`, then `second` automatically.
+
+#### **`std::set<T>` & `std::map<K, V>`**
+*   **Underlying:** Balanced BST (Red-Black Tree).
+*   **Complexity:** Insert/Find/Erase are all $O(\log N)$.
+*   **Sorted:** Iterating always yields elements in sorted order (min to max).
+*   **Uniqueness:** No duplicates.
+*   **Code Snippet:**
+    ```cpp
+    std::set<int> s;
+    s.insert(10);
+    if (s.find(10) != s.end()) { /* found */ }
+    ```
+*   **Map Specific:** `m[key] = val`. Accessing `m[key]` for a non-existent key **creates** it with a default value! Use `m.find(key)` to check existence safely.
+
+#### **`std::algorithm`**
+*   `std::sort(begin, end)`: $O(N \log N)$.
+*   `std::lower_bound(begin, end, val)`: Returns iterator to first element $\ge val$. ($O(\log N)$ on sorted range).
+*   `std::upper_bound(begin, end, val)`: Returns iterator to first element $> val$. ($O(\log N)$ on sorted range).
+
+---
+
+### 4. Common "Gotchas" & Tricks
+
+1.  **Iterator Invalidation:**
+    *   In `vector`, doing `push_back` or `insert` might resize the array, moving it to a new memory location. **All previous pointers/iterators become invalid.**
+    *   In `set/map`, inserting/deleting only invalidates iterators to the specific element removed.
+
+2.  **Comparison Functions:**
+    *   When writing a custom comparator (e.g., for `sort` or `priority_queue`), it must return `true` if **Left comes STRICTLY before Right**.
+    *   `priority_queue` is a Max Heap by default (largest on top). To make a Min Heap (smallest on top), use `greater<int>`.
+
+3.  **Pass By Reference:**
+    *   `void func(vector<int> v)` -> Copies the whole vector (Slow, $O(N)$).
+    *   `void func(vector<int> &v)` -> passes memory address (Fast, $O(1)$).
+    *   **Always use `&` for complex objects unless you specifically need a copy.**
+
+4.  **Integer Division:**
+    *   `5 / 2` is `2`, not `2.5`.
+    *   To get ceil(a/b) for positive integers: `(a + b - 1) / b`.
+
+5.  **Ancestor/Descendant Logic:**
+    *   If traversing a BST and `target < current`, go Left.
+    *   If `target > current`, go Right.
+    *   If `target == current`, you found it.
+    *   LCA Logic: The LCA is the node where `p` wants to go Left and `q` wants to go Right (or vice versa).
+
+Good luck! Focus on the logic of **how** things move in memory (pointers vs array indices).

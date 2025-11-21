@@ -1,0 +1,267 @@
+---
+sidebar_position: 2
+---
+
+# DSA67 Mid-term Solutions
+
+### 1. Vector Count Distinct
+
+**Problem Understanding:**
+The goal is to count the number of distinct elements in a `CP::vector` within a specified range `[a, b)`. The range is defined by two iterators, `a` (inclusive) and `b` (exclusive). Note that the problem statement in the PDF says `a` to `b` (inclusive of `a`, but exclusive of `b` based on standard C++ iterator ranges, though the problem description says "from the element pointed to by `a` up to the element before `b`", which aligns with `[a, b)`). Wait, looking closer at the PDF text: "from the element specified by `a` until the last element before the element specified by `b`". This confirms the range is `[a, b)`.
+
+However, reading the PDF again, it says `a <= b` is guaranteed. And the example `{9,3,5,3,5,5,3,8,7}`, `a` points to index 2 (value 5), `b` points to index 7 (value 8). The range of interest is indices 2, 3, 4, 5, 6 which are `5, 3, 5, 5, 3`. Distinct values are `5` and `3`, so the count is 2. The element at index 7 is NOT included. This is standard iterator range behavior.
+
+**Thought Process:**
+
+1.  **Naive Approach:** Iterate from `a` to `b`. For each element, check if we've seen it before. If not, increment a counter and add it to a list of seen elements.
+    *   *Complexity:* For each element, we scan the "seen" list. In the worst case (all unique), this is $O(N^2)$ where $N$ is the number of elements in the range.
+    *   *Constraints check:* The problem statement says the number of operations on `vec` won't exceed 1,000,000. A generic $O(N^2)$ might be too slow if the range is large (e.g., N=100,000). We need something faster.
+
+2.  **Sorting Approach:** Copy the elements in the range `[a, b)` to a temporary vector. Sort the temporary vector. Then iterate through the sorted vector to count unique elements (elements different from their predecessor).
+    *   *Complexity:* Sorting takes $O(N \log N)$. The linear scan takes $O(N)$. Total is $O(N \log N)$.
+    *   *Feasibility:* $N=100,000$ implies $N \log N \approx 1.7 \times 10^6$, which is well within typical time limits (1 second usually handles $\sim 10^8$ operations). This is a strong candidate.
+
+3.  **Set Approach:** Use a `std::set` (or `std::unordered_set`). Iterate from `a` to `b`, inserting each element into the set. The set handles uniqueness automatically. The answer is simply `set.size()`.
+    *   *Complexity:* Insertion into `std::set` takes $O(\log (\text{current size}))$. Doing this $N$ times results in $O(N \log N)$. `std::unordered_set` would be $O(N)$ on average but worst-case $O(N^2)$.
+    *   *Feasibility:* Same as sorting, very feasible. Since `CP::vector` is generic `<T>`, `T` might not have a hash function defined (needed for `unordered_set`), but usually `T` supports `<` operator (needed for `std::set` and `std::sort`). Given this is a standard data structures problem, assuming `<` is available is safer than assuming a hash function.
+
+**Decision:**
+The `std::set` approach is usually the cleanest to write. The Sorting approach avoids the overhead of tree nodes allocation in `std::set` but requires copying data. Given the constraints and context (likely `T` supports `<`), I'll provide the `std::set` solution as it's standard and concise. If you cannot use `std::set`, sorting a copy is the fallback.
+
+**Implementation Details:**
+-   Include `<set>`.
+-   Create `std::set<T> s;`.
+-   Loop `for (auto it = a; it != b; ++it)`.
+-   `s.insert(*it);`.
+-   Return `s.size()`.
+
+**Wait, checking the file provided:** `da67-m-count-distinct_vector.h` defines `CP::vector`. `iterator` is `T*`. So `a` and `b` are pointers.
+The problem asks to implement `count_distinct` inside `student.h`.
+
+Let's write the code.
+
+```cpp
+#ifndef __STUDENT_H_
+#define __STUDENT_H_
+
+#include "vector.h"
+#include <set> // We need this for the efficient counting
+
+template <typename T>
+size_t CP::vector<T>::count_distinct(CP::vector<T>::iterator a, CP::vector<T>::iterator b)
+{
+    // Create a set to store unique elements encountered so far.
+    // std::set automatically handles duplicates.
+    std::set<T> unique_elements;
+
+    // Iterate from iterator 'a' up to 'b' (exclusive).
+    // In CP::vector, iterators are just pointers, so standard pointer arithmetic works.
+    for (auto it = a; it != b; ++it) {
+        // Insert the value pointed to by 'it' into the set.
+        // If the value is already there, it does nothing.
+        unique_elements.insert(*it);
+    }
+
+    // The size of the set represents the number of unique elements.
+    return unique_elements.size();
+}
+
+#endif
+```
+
+### 2. BST Lowest Common Ancestor (LCA)
+
+**Problem Understanding:**
+We need to find the "Lowest Common Ancestor" (LCA) of two nodes `p` and `q` in a Binary Search Tree (BST).
+-   **Ancestor definition:** An ancestor of node $x$ includes all nodes on the path from the root to $x$ (including root and $x$ itself).
+-   **Common Ancestor:** A node that is an ancestor of both `p` and `q`.
+-   **Lowest (Deepest) Common Ancestor:** The common ancestor that is furthest from the root (deepest level).
+
+**Key Property of BST:**
+For any node $N$:
+-   All values in the left subtree are **less** than $N$.
+-   All values in the right subtree are **greater** than $N$.
+(Based on the provided `map_bst` code which uses `mLess`, strictly speaking it satisfies the comparison logic defined by `mLess`).
+
+**Thought Process:**
+
+1.  **Traversal from Root:** Start at the root. Let the current node be `curr`.
+2.  **Compare values:**
+    *   Let `val_p` be the value at node `p` and `val_q` be the value at node `q`.
+    *   If both `val_p` and `val_q` are **less** than `curr->data`, it means both `p` and `q` must be in the **left** subtree of `curr`. So, the LCA must also be in the left subtree. We move `curr` to `curr->left`.
+    *   If both `val_p` and `val_q` are **greater** than `curr->data`, it means both are in the **right** subtree. We move `curr` to `curr->right`.
+    *   If we have a "split" (one is smaller, one is larger), or if `curr` matches either `p` or `q`, then `curr` **is** the LCA. Why?
+        *   If one is left and one is right, `curr` is the node where their paths diverge. Any descendant of `curr` can only be an ancestor of *one* of them, not both. Thus `curr` is the lowest one.
+        *   If `curr == p`, then `p` is an ancestor of `q` (or vice versa), so `p` is the LCA.
+
+**Refining with `mLess`:**
+The class uses `mLess` (comparator). `p` and `q` are iterators. We access the actual data using `p->first` (since `map_bst` stores `pair<Key, Value>`).
+-   `p->first` < `curr->data.first` is written as `mLess(p->first, curr->data.first)`.
+-   `p->first` > `curr->data.first` is written as `mLess(curr->data.first, p->first)`.
+
+**Algorithm:**
+1.  Start `node* n = mRoot`.
+2.  While `n` is not NULL:
+    *   Check relation of `p` vs `n` and `q` vs `n`.
+    *   If `p < n` AND `q < n`: `n = n->left`.
+    *   Else if `p > n` AND `q > n`: `n = n->right`.
+    *   Else: Found it! Return iterator to `n`.
+3.  Return `end()` if something goes wrong (though problem guarantees valid p, q inside the tree).
+
+**Wait, wait!**
+The problem asks to implement `recursive` function inside `map_bst` too?
+Looking at `da67_m_bst_lca_student.cpp`:
+```cpp
+template <typename KeyT, ...>
+typename CP::map_bst<...>::iterator CP::map_bst<...>::recursive(node* n, iterator p, iterator q) const
+{
+    // You may need this function
+}
+
+template <typename KeyT, ...>
+typename CP::map_bst<...>::iterator CP::map_bst<...>::lca(iterator p, iterator q) const
+{
+    // Write your code here
+}
+```
+The hint implies a recursive structure. The logic derived above works perfectly recursively or iteratively. Since the structure provides a `recursive` helper, let's implement it recursively.
+
+**Recursive Logic:**
+`lca(p, q)` calls `recursive(mRoot, p, q)`.
+
+`recursive(n, p, q)`:
+1.  If `n` is NULL, return `end()` (or some base case).
+2.  Value `v_n = n->data.first`, `v_p = p->first`, `v_q = q->first`.
+3.  If `v_p < v_n` AND `v_q < v_n`: return `recursive(n->left, p, q)`.
+4.  If `v_p > v_n` AND `v_q > v_n`: return `recursive(n->right, p, q)`.
+5.  Else: Found the split point. Return `iterator(n)`.
+
+**Implementation Details:**
+-   Access data: `p->first` (since iterator points to `pair`).
+-   Comparison: use `mLess`.
+    -   `a < b` -> `mLess(a, b)`
+    -   `a > b` -> `mLess(b, a)`
+
+Let's write the code.
+
+```cpp
+#ifndef __STUDENT_H_
+#define __STUDENT_H_
+
+// You can include library here
+#include "map_bst.h"
+
+template <typename KeyT,
+          typename MappedT,
+          typename CompareT>
+typename CP::map_bst<KeyT,MappedT,CompareT>::iterator CP::map_bst<KeyT,MappedT,CompareT>::recursive(node* n,CP::map_bst<KeyT,MappedT,CompareT>::iterator p, CP::map_bst<KeyT,MappedT,CompareT>::iterator q) const
+{
+    // Base case: if node is null, we can't find anything (though theoretically shouldn't happen with valid p, q)
+    if (n == NULL) return iterator(NULL);
+
+    // Extract keys for easier comparison
+    KeyT key_p = p->first;
+    KeyT key_q = q->first;
+    KeyT key_n = n->data.first;
+
+    // Case 1: Both p and q are smaller than current node n.
+    // The LCA must be in the left subtree.
+    if (mLess(key_p, key_n) && mLess(key_q, key_n)) {
+        return recursive(n->left, p, q);
+    }
+
+    // Case 2: Both p and q are larger than current node n.
+    // The LCA must be in the right subtree.
+    if (mLess(key_n, key_p) && mLess(key_n, key_q)) {
+        return recursive(n->right, p, q);
+    }
+
+    // Case 3: Split point.
+    // One is smaller/equal and one is larger/equal.
+    // OR one of them IS the current node n.
+    // In any of these cases, n is the LCA.
+    return iterator(n);
+}
+
+
+template <typename KeyT,
+          typename MappedT,
+          typename CompareT>
+typename CP::map_bst<KeyT,MappedT,CompareT>::iterator CP::map_bst<KeyT,MappedT,CompareT>::lca(CP::map_bst<KeyT,MappedT,CompareT>::iterator p, CP::map_bst<KeyT,MappedT,CompareT>::iterator q) const
+{
+    // Start recursion from the root
+    return recursive(mRoot, p, q);
+}
+
+#endif
+```
+
+### Summary of Files to Modify
+
+**1. `da67-m-count-distinct_student.cpp`**
+(Wait, the file provided is `.cpp`, but header guards usually imply `.h` or it's included. The file name in your prompt says `da67-m-count-distinct_student.cpp` but contains `#ifndef __STUDENT_H_`. I will just provide the content).
+
+```cpp
+#ifndef __STUDENT_H_
+#define __STUDENT_H_
+
+#include "vector.h"
+#include <set>
+
+template <typename T>
+size_t CP::vector<T>::count_distinct(CP::vector<T>::iterator a, CP::vector<T>::iterator b)
+{
+    std::set<T> s;
+    for (auto it = a; it != b; ++it) {
+        s.insert(*it);
+    }
+    return s.size();
+}
+
+#endif
+```
+
+**2. `da67_m_bst_lca_student.cpp`**
+
+```cpp
+#ifndef __STUDENT_H_
+#define __STUDENT_H_
+
+// You can include library here
+#include "map_bst.h"
+
+
+template <typename KeyT,
+          typename MappedT,
+          typename CompareT>
+typename CP::map_bst<KeyT,MappedT,CompareT>::iterator CP::map_bst<KeyT,MappedT,CompareT>::recursive(node* n,CP::map_bst<KeyT,MappedT,CompareT>::iterator p, CP::map_bst<KeyT,MappedT,CompareT>::iterator q) const
+{
+    if (n == NULL) return iterator(NULL);
+    
+    // If both p and q are less than n, go left
+    if (mLess(p->first, n->data.first) && mLess(q->first, n->data.first)) {
+        return recursive(n->left, p, q);
+    }
+    
+    // If both p and q are greater than n, go right
+    if (mLess(n->data.first, p->first) && mLess(n->data.first, q->first)) {
+        return recursive(n->right, p, q);
+    }
+    
+    // Otherwise, we found the split point, return n
+    return iterator(n);
+}
+
+
+template <typename KeyT,
+          typename MappedT,
+          typename CompareT>
+typename CP::map_bst<KeyT,MappedT,CompareT>::iterator CP::map_bst<KeyT,MappedT,CompareT>::lca(CP::map_bst<KeyT,MappedT,CompareT>::iterator p, CP::map_bst<KeyT,MappedT,CompareT>::iterator q) const
+{
+    return recursive(mRoot, p, q);
+}
+
+#endif
+```
+
+These solutions directly address the logic required. The vector problem uses a `set` for $O(N \log N)$ uniqueness counting. The BST LCA problem exploits the BST property where the first node that splits the paths to two target nodes (or is one of the nodes itself) is their lowest common ancestor.
