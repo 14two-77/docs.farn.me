@@ -4,6 +4,8 @@ sidebar_position: 2
 
 # DSA67 Mid-term Solutions
 
+## First Version
+
 ### 1. Vector Count Distinct
 
 - [Google Drive](https://drive.google.com/drive/folders/1Zw5hlI1JyhgVdsewt9Z2xGquVJpHpao9?usp=drive_link)
@@ -200,7 +202,7 @@ typename CP::map_bst<KeyT,MappedT,CompareT>::iterator CP::map_bst<KeyT,MappedT,C
 #endif
 ```
 
-### Summary of Files to Modify
+### Summary of Files to Modify of 1, 2
 
 **1. `da67-m-count-distinct_student.cpp`**
 (Wait, the file provided is `.cpp`, but header guards usually imply `.h` or it's included. The file name in your prompt says `da67-m-count-distinct_student.cpp` but contains `#ifndef __STUDENT_H_`. I will just provide the content).
@@ -469,3 +471,307 @@ int main() {
 
 3.  **Chocolate Truffle:** A greedy/binary search approach. Linearize the 2D grid into 1D indices. Sort the favorite locations. For each start point, use `lower_bound` to find the nearest future target. If not found, wrap around to the first target. Complexity $O(K \log K + Q \log K)$.
 4.  **Queue Block Insert:** A standard array insertion logic adapted for circular buffers. Expand capacity, shift elements from the back to create a hole, fill the hole, update size. Uses modular arithmetic for all array accesses. Complexity $O(N + m)$.
+
+## Second Version
+
+Here is the comprehensive guide for the 4 problems, including interpretation, concepts, ASCII visualization, thought processes, and the solution code.
+
+---
+
+## 1. Vector Count Distinct
+**File:** `da67-m-count-distinct_student.h`
+
+### 1.1 Problem Interpretation
+You are given a range within a vector defined by two iterators: `a` (start inclusive) and `b` (end exclusive). You need to calculate how many **unique** numbers exist in this specific range.
+
+### 1.2 Knowledge Needed
+*   **Iterators:** In `CP::vector`, iterators are just pointers (`T*`). You can loop from `a` to `b` using `++`.
+*   **Set Data Structure (`std::set`):** A set automatically removes duplicates. Inserting `1, 1, 2` into a set results in `{1, 2}` (size 2).
+
+### 1.3 ASCII Visualization
+Vector: `[ 10 | 20 | 10 | 30 | 20 | 50 ]`
+Iterators:      ^a             ^b
+Range to check: `20, 10, 30` (b is exclusive)
+
+Process:
+1. Read 20 -> Set: {20}
+2. Read 10 -> Set: {10, 20}
+3. Read 30 -> Set: {10, 20, 30}
+Result Size: 3
+
+### 1.4 Thought Process
+1.  I need to look at every element between `a` and `b`.
+2.  I need to keep track of what I've seen to avoid counting duplicates.
+3.  The easiest way to handle "uniqueness" in C++ is `std::set`.
+4.  **Algorithm:** Loop through the range, insert every item into a `std::set`, then return the size of the set.
+
+### 1.5 Solution Code
+```cpp
+#ifndef __STUDENT_H_
+#define __STUDENT_H_
+
+#include "vector.h"
+#include <set> // Essential for counting unique elements
+
+template <typename T>
+size_t CP::vector<T>::count_distinct(CP::vector<T>::iterator a, CP::vector<T>::iterator b)
+{
+    std::set<T> s;
+    
+    // Iterate from 'a' until we hit 'b'
+    // Since iterators in CP::vector are pointers, this works like standard pointer arithmetic
+    for (auto it = a; it != b; ++it) {
+        s.insert(*it); // Insert value. If duplicate, set ignores it.
+    }
+    
+    return s.size(); // Return count of unique elements
+}
+
+#endif
+```
+
+---
+
+## 2. BST Lowest Common Ancestor (LCA)
+**File:** `da67_m_bst_lca_student.cpp`
+
+### 2.1 Problem Interpretation
+Given two nodes $P$ and $Q$ inside a Binary Search Tree, find the "lowest" node (deepest in the tree) that is an ancestor to both. In a BST, the LCA is the point where the paths to $P$ and $Q$ split.
+
+### 2.2 Knowledge Needed
+*   **BST Property:** For any node $N$, all values in `left` are smaller, all values in `right` are larger.
+*   **Recursion:** Traversing the tree without loops.
+
+### 2.3 ASCII Visualization
+Tree:
+      20
+     /  \
+   10    30
+  /  \
+ 5   15
+
+Case 1: Find LCA(5, 15)
+- Start at 20.
+- 5 < 20 AND 15 < 20. Both are smaller.
+- Must go LEFT.
+- Current is 10.
+- 5 < 10 (Left), 15 > 10 (Right).
+- SPLIT! One goes left, one goes right. 10 is the LCA.
+
+Case 2: Find LCA(5, 30)
+- Start at 20.
+- 5 < 20 (Left), 30 > 20 (Right).
+- SPLIT! 20 is the LCA.
+
+### 2.4 Thought Process
+1.  We start at the root.
+2.  If both $P$ and $Q$ have values **smaller** than current node, the LCA must be in the **Left** subtree.
+3.  If both $P$ and $Q$ have values **larger** than current node, the LCA must be in the **Right** subtree.
+4.  If neither is true (one smaller, one larger, or one *is* the current node), then **Current Node** is the split point (LCA).
+
+### 2.5 Solution Code
+```cpp
+#ifndef __STUDENT_H_
+#define __STUDENT_H_
+
+#include "map_bst.h"
+
+template <typename KeyT, typename MappedT, typename CompareT>
+typename CP::map_bst<KeyT,MappedT,CompareT>::iterator CP::map_bst<KeyT,MappedT,CompareT>::recursive(node* n, CP::map_bst<KeyT,MappedT,CompareT>::iterator p, CP::map_bst<KeyT,MappedT,CompareT>::iterator q) const
+{
+    if (n == NULL) return iterator(NULL); // Safety check
+
+    // Use mLess to compare keys.
+    // p->first accesses the Key of iterator p
+    // n->data.first accesses the Key of the current node
+    
+    // Case 1: Both p and q are in the LEFT subtree (both < n)
+    if (mLess(p->first, n->data.first) && mLess(q->first, n->data.first)) {
+        return recursive(n->left, p, q);
+    }
+    
+    // Case 2: Both p and q are in the RIGHT subtree (both > n)
+    // Note: mLess(A, B) means A < B. So mLess(n, p) means n < p (p is larger).
+    if (mLess(n->data.first, p->first) && mLess(n->data.first, q->first)) {
+        return recursive(n->right, p, q);
+    }
+    
+    // Case 3: Split point found. n is the LCA.
+    return iterator(n);
+}
+
+template <typename KeyT, typename MappedT, typename CompareT>
+typename CP::map_bst<KeyT,MappedT,CompareT>::iterator CP::map_bst<KeyT,MappedT,CompareT>::lca(CP::map_bst<KeyT,MappedT,CompareT>::iterator p, CP::map_bst<KeyT,MappedT,CompareT>::iterator q) const
+{
+    return recursive(mRoot, p, q);
+}
+
+#endif
+```
+
+---
+
+## 3. Queue Block Insert
+**File:** `da67_m_queue_block_insert_student.cpp`
+
+### 3.1 Problem Interpretation
+Insert `m` copies of a value `element` into the queue at a specific index `p`. This is like a "vector insert" but inside a Circular Queue.
+
+### 3.2 Knowledge Needed
+*   **Circular Buffer Arithmetic:** To access logical index `i`, we look at physical index `(mFront + i) % mCap`.
+*   **Shifting Array:** To insert in the middle, we must move existing items to the right to create space.
+
+### 3.3 ASCII Visualization
+Logical Queue: `[ A, B, C, D ]` (Size 4)
+Insert(p=1, m=2, val=X) -> Insert 2 'X's at index 1.
+
+Step 1: Shift [B, C, D] right by 2.
+`[ A, _, _, B, C, D ]`
+
+Step 2: Fill holes.
+`[ A, X, X, B, C, D ]`
+
+Physical Memory (Circular View):
+Maybe mFront is at index 8 in an array of size 10.
+`[ C, D, _, _, _, _, _, _, A, B ]`
+We must use modulo `%` to wrap around correctly when shifting.
+
+### 3.4 Thought Process
+1.  **Capacity:** First, make sure we have memory (`ensureCapacity(mSize + m)`).
+2.  **Shift:** We need to move the block starting at `p` to `end`.
+    *   Since we are moving items to the *right*, we must loop **backwards** (from last item down to `p`) to avoid overwriting data we haven't moved yet.
+    *   Logical index `i` moves to `i + m`.
+3.  **Fill:** Write `m` copies of `element` into the gap `[p, p+m-1]`.
+4.  **Update:** `mSize += m`.
+
+### 3.5 Solution Code
+```cpp
+#ifndef __STUDENT_H_
+#define __STUDENT_H_
+
+#include "queue.h"
+
+template <typename T>
+void CP::queue<T>::block_insert(size_t p, size_t m, const T &element)
+{
+    // 1. Ensure Capacity
+    ensureCapacity(mSize + m);
+
+    // 2. Shift elements to create a hole
+    // Loop from the last element (mSize - 1) down to p.
+    // Using long long for 'i' to avoid issues if p=0 and we decrement 0 (unsigned underflow)
+    for (long long i = mSize - 1; i >= (long long)p; i--) {
+        size_t src_phys = (mFront + i) % mCap;       // Where data is now
+        size_t dst_phys = (mFront + i + m) % mCap;   // Where data goes (shifted by m)
+        mData[dst_phys] = mData[src_phys];
+    }
+
+    // 3. Fill the hole with 'element'
+    for (size_t i = 0; i < m; i++) {
+        size_t dst_phys = (mFront + p + i) % mCap;
+        mData[dst_phys] = element;
+    }
+
+    // 4. Update Size
+    mSize += m;
+}
+
+#endif
+```
+
+---
+
+## 4. Chocolate Truffle
+**File:** `da67_m_chocolate_truffle` (Standard `main.cpp` logic)
+
+### 4.1 Problem Interpretation
+You are on a grid of size $R \times C$. You eat chocolates moving row by row (Row 1: left to right, then Row 2...). If you finish the grid, you loop back to (1,1). Given a starting position and a list of "Favorite" chocolates, how many steps (days) until you eat a favorite one?
+
+### 4.2 Knowledge Needed
+*   **2D to 1D Mapping:** A grid cell $(r, c)$ corresponds to linear index $(r-1) \times C + (c-1)$.
+*   **Binary Search (`lower_bound`):** To quickly find the *next* target in a sorted list.
+*   **Circular Logic:** If the target is "behind" us in the linear list, it means we must finish the current grid and wrap around.
+
+### 4.3 ASCII Visualization
+Grid 3x3 flattened to line (Index 0 to 8).
+`[ 0, 1, 2, 3, 4, 5, 6, 7, 8 ]`
+Favorites at: `2` and `7`.
+
+Query 1: Start at `4`.
+- Look ahead: Is there a favorite $\ge 4$? Yes, `7`.
+- Distance: $7 - 4 = 3$.
+
+Query 2: Start at `8`.
+- Look ahead: Is there a favorite $\ge 8$? No.
+- Wrap around! We go to the *first* favorite (`2`).
+- Distance: (TotalSize - Start) + FirstTarget
+- Distance: (9 - 8) + 2 = 1 + 2 = 3.
+
+### 4.4 Thought Process
+1.  $R$ and $C$ are huge ($10^9$), so we cannot create a 2D array.
+2.  However, the movement is strictly linear (0, 1, 2... N). We can convert any $(r, c)$ to a single number `id`.
+3.  Store all Favorite `id`s in a vector and **sort** them.
+4.  For each query (Start `S`):
+    *   Use `std::lower_bound` to find the first favorite `F` where `F >= S`.
+    *   **Case A (Found):** We eat that one. Time = `F - S`.
+    *   **Case B (Not Found):** We passed all favorites on this pass. We must wrap around to the very first favorite in the list (index 0). Time = `(TotalCells - S) + targets[0]`.
+
+### 4.5 Solution Code
+```cpp
+#include <iostream>
+#include <vector>
+#include <algorithm>
+
+using namespace std;
+
+int main() {
+    // Optimize I/O
+    ios_base::sync_with_stdio(false); 
+    cin.tie(NULL);
+
+    long long R, C;
+    int K;
+    // Read dimensions and number of favorites
+    if (!(cin >> R >> C >> K)) return 0;
+
+    // Store favorite positions as 1D linear indices
+    vector<long long> targets;
+    targets.reserve(K);
+
+    for(int i = 0; i < K; i++) {
+        long long r, c;
+        cin >> r >> c;
+        // Convert 1-based (r,c) to 0-based linear index
+        // Formula: (row_index * width) + col_index
+        long long idx = (r - 1) * C + (c - 1);
+        targets.push_back(idx);
+    }
+
+    // Sort targets to allow Binary Search (O(log K))
+    sort(targets.begin(), targets.end());
+
+    int Q;
+    cin >> Q; // Number of queries
+    while(Q--) {
+        long long start_r, start_c;
+        cin >> start_r >> start_c;
+        long long start_idx = (start_r - 1) * C + (start_c - 1);
+
+        // Find first target >= start_idx
+        auto it = lower_bound(targets.begin(), targets.end(), start_idx);
+
+        if (it != targets.end()) {
+            // Case A: Found a target ahead of us in the linear timeline
+            cout << (*it - start_idx) << "\n";
+        } else {
+            // Case B: No target ahead. Wrap around to the start.
+            // Steps to finish grid = (R*C) - start_idx
+            // Steps from 0 to first target = targets[0]
+            long long total_cells = R * C;
+            cout << (total_cells - start_idx + targets[0]) << "\n";
+        }
+    }
+
+    return 0;
+}
+```
