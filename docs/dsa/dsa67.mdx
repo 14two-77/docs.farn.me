@@ -6,6 +6,8 @@ sidebar_position: 2
 
 ### 1. Vector Count Distinct
 
+- [Google Drive](https://drive.google.com/drive/folders/1Zw5hlI1JyhgVdsewt9Z2xGquVJpHpao9?usp=drive_link)
+
 **Problem Understanding:**
 The goal is to count the number of distinct elements in a `CP::vector` within a specified range `[a, b)`. The range is defined by two iterators, `a` (inclusive) and `b` (exclusive). Note that the problem statement in the PDF says `a` to `b` (inclusive of `a`, but exclusive of `b` based on standard C++ iterator ranges, though the problem description says "from the element pointed to by `a` up to the element before `b`", which aligns with `[a, b)`). Wait, looking closer at the PDF text: "from the element specified by `a` until the last element before the element specified by `b`". This confirms the range is `[a, b)`.
 
@@ -70,6 +72,8 @@ size_t CP::vector<T>::count_distinct(CP::vector<T>::iterator a, CP::vector<T>::i
 ```
 
 ### 2. BST Lowest Common Ancestor (LCA)
+
+- [Google Drive](https://drive.google.com/drive/folders/17uxa6M9JhdybsS2AwYT4LcqI0c80cNMG?usp=drive_link)
 
 **Problem Understanding:**
 We need to find the "Lowest Common Ancestor" (LCA) of two nodes `p` and `q` in a Binary Search Tree (BST).
@@ -265,3 +269,203 @@ typename CP::map_bst<KeyT,MappedT,CompareT>::iterator CP::map_bst<KeyT,MappedT,C
 ```
 
 These solutions directly address the logic required. The vector problem uses a `set` for $O(N \log N)$ uniqueness counting. The BST LCA problem exploits the BST property where the first node that splits the paths to two target nodes (or is one of the nodes itself) is their lowest common ancestor.
+
+### 3. Queue Block Insert
+
+- [Google Drive](https://drive.google.com/drive/folders/1VZDKCN30MZ58GbjmIzZ06V3D_OnalHWI?usp=drive_link)
+
+**Problem Understanding:**
+We need to implement a function `block_insert(size_t p, size_t m, const T &element)` for `CP::queue`.
+-   **Goal:** Insert `m` copies of `element` into the queue starting at logical index `p`.
+-   **Logical Index `p`:** This means the new elements will occupy indices `p` through `p + m - 1`. The original element at `p` will shift to `p + m`, and so on.
+-   **Queue Properties:** It's a circular buffer implementation (`mData`, `mFront`, `mSize`, `mCap`).
+-   **Constraints:** $0 \le p \le mSize$.
+
+**Thought Process:**
+
+1.  **Naive Approach (using `push`):**
+    *   Create a new temporary queue.
+    *   Pop elements from the original queue and push to temp until index `p`.
+    *   Push `m` copies of `element` to temp.
+    *   Pop the rest from original and push to temp.
+    *   Swap temp with original.
+    *   *Complexity:* $O(N)$ for copying elements. But it involves creating a whole new queue and copying everything. Is there a more efficient way, perhaps in-place?
+
+2.  **In-place Shifting:**
+    *   We need to make space for `m` elements. First, ensure capacity is sufficient (`mSize + m <= mCap`).
+    *   We need to shift elements from logical index `p` to `mSize - 1` to the right by `m` positions.
+    *   Wait, circular buffer shifting is tricky. The "right" might wrap around.
+    *   Let's think about the array linearly first (if `mFront = 0` and no wrap):
+        *   Existing: `[0, 1, ..., p-1, p, p+1, ..., size-1]`
+        *   New: `[0, 1, ..., p-1, NEW...NEW, p, p+1, ..., size-1]`
+    *   We need to move the block `[p, size-1]` to `[p+m, size-1+m]`.
+    *   Just like `vector::insert`, we should iterate backwards to avoid overwriting data we haven't moved yet.
+    *   **Loop:** From `i = mSize - 1` down to `p`. Move element at logical `i` to logical `i + m`.
+    *   **Mapping:** Logical index `k` maps to physical index `(mFront + k) % mCap`.
+    *   **After Shifting:** Fill logical indices `[p, p + m - 1]` with `element`.
+    *   **Update Size:** `mSize += m`.
+
+3.  **Refining In-place Shifting:**
+    *   *Capacity:* Use `ensureCapacity(mSize + m)`. This handles reallocation if needed. If reallocation happens, `mFront` becomes 0, which simplifies things (but the logic `(mFront + i) % mCap` handles both cases anyway).
+    *   *Shifting:*
+        *   `for (i = mSize - 1; i >= p; i--)` ? Since `size_t` is unsigned, `i >= p` works fine unless `p=0` and `i` underflows. Actually, if `p > mSize`, we don't shift. Wait, `p` can be `mSize` (append). If `p == mSize`, the loop `mSize - 1` down to `p` doesn't run (correct).
+        *   Wait, `size_t` underflow is dangerous. A loop `for (size_t i = mSize; i > p; i--)` is safer. We move element `i-1` to `i-1+m`. Let's use `i` as the source index.
+        *   Loop `i` from `mSize - 1` down to `p`.
+        *   Source physical: `(mFront + i) % mCap`
+        *   Dest physical: `(mFront + i + m) % mCap`
+        *   `mData[dest] = mData[src]`
+    *   *Filling:*
+        *   Loop `i` from `0` to `m - 1`.
+        *   Dest physical: `(mFront + p + i) % mCap`
+        *   `mData[dest] = element`
+
+**Why this works:**
+This is essentially the standard array insertion logic adapted for a circular buffer. By using the modulo operator for every access, we abstract away the "circular" nature and treat it like a linear array of logical indices.
+
+**Implementation Details:**
+-   `ensureCapacity(mSize + m)` first.
+-   Loop for shifting.
+-   Loop for inserting.
+-   Update `mSize`.
+
+**Code:**
+
+```cpp
+#ifndef __STUDENT_H_
+#define __STUDENT_H_
+
+#include "queue.h"
+
+template <typename T>
+void CP::queue<T>::block_insert(size_t p, size_t m, const T &element)
+{
+    // 1. Ensure we have enough space for the new m elements.
+    // This will resize mData if necessary and reset mFront to 0 if expanded.
+    ensureCapacity(mSize + m);
+
+    // 2. Shift existing elements to make a "hole" of size m at logical index p.
+    // We iterate backwards from the last element (mSize - 1) down to p.
+    // This prevents overwriting elements we haven't moved yet.
+    // We use 'int' for loop variable to safely handle the p=0 case without unsigned underflow issues in standard loop
+    // OR just be careful with size_t logic. Let's use size_t carefully.
+    // Range to move: logical [p, mSize - 1]
+    // Move to: logical [p + m, mSize - 1 + m]
+    
+    if (p < mSize) { // Only need to shift if p is not at the very end
+        for (size_t i = mSize; i > p; i--) {
+            // Moving element at logical index (i-1) to (i-1+m)
+            size_t src_idx = (mFront + (i - 1)) % mCap;
+            size_t dst_idx = (mFront + (i - 1 + m)) % mCap;
+            mData[dst_idx] = mData[src_idx];
+        }
+    }
+
+    // 3. Fill the hole with the new element.
+    // The hole starts at logical index p and has size m.
+    for (size_t i = 0; i < m; i++) {
+        size_t dst_idx = (mFront + p + i) % mCap;
+        mData[dst_idx] = element;
+    }
+
+    // 4. Update the size of the queue.
+    mSize += m;
+}
+
+#endif
+```
+
+### 4. Chocolate Truffle
+
+- [Google Drive](https://drive.google.com/file/d/1suyqDdm6xwJTHsalWDY4x9aPXu03MOMO/view?usp=drive_link)
+
+**Problem Understanding:**
+We have a grid of size $R \times C$. Some cells contain "favorite" chocolates. We start eating at a given cell $(r, c)$ and proceed sequentially: $(r, c) \to (r, c+1) \to \dots \to (r, C) \to (r+1, 1) \to \dots$. This is essentially a row-major traversal. If we reach $(R, C)$, we wrap around to $(1, 1)$. We eat one piece per day. We need to find out how many days it takes to eat a favorite chocolate starting from various positions. Since there are multiple queries and multiple favorite chocolates, we need an efficient way to answer.
+
+**Thought Process:**
+1.  **Coordinate Transformation:** The grid traversal is linear. We can map any cell $(r, c)$ to a single linear index: $Index = (r-1) \times C + (c-1)$. The total number of cells is $N = R \times C$.
+2.  **Linear Representation:** The problem becomes: given a starting index $S$ in a range $[0, N-1]$, find the smallest distance to a "target" index $T$ in a cyclic manner. The distance is $(T - S + N) \% N$.
+3.  **Multiple Targets:** We have $K$ favorite chocolates, let's say at indices $t_1, t_2, \dots, t_k$. For a query start index $S$, we want $\min_{i} ((t_i - S + N) \% N)$.
+4.  **Optimizing Queries:**
+    *   Naive approach: For each query $S$, loop through all $t_i$. Complexity $O(Q \times K)$. With $Q, K$ up to $2 \cdot 10^5$, this is $4 \cdot 10^{10}$, which is too slow (Time Limit 1s).
+    *   Sorting targets: Sort the target indices $t_1 < t_2 < \dots < t_k$. For a start index $S$, the nearest target is either the smallest $t_i \ge S$ (forward search) or, if no such $t_i$ exists (i.e., $S > t_k$), we wrap around to $t_1$.
+    *   Using `upper_bound` (or `lower_bound`): For a given $S$, we can find the first target $\ge S$ using binary search (`lower_bound`).
+        *   If found (iterator != end), the distance is `*it - S`.
+        *   If not found (iterator == end), we must wrap around to the very first target $t_1$. The distance is `(N - S) + t_1`.
+    *   Complexity with sorting: Sorting targets takes $O(K \log K)$. Each query takes $O(\log K)$. Total complexity $O(K \log K + Q \log K)$, which fits well within the time limit.
+
+**Constraint Analysis:**
+*   $R, C \le 10^9$: We cannot allocate an array of size $R \times C$. But $K, Q$ are relatively small ($2 \cdot 10^5$). We only care about specific coordinates.
+*   Coordinates $(r, c)$: Input is 1-based.
+*   Output type: The answer can be up to $N \approx 10^{18}$, so use `long long`.
+
+**Code Implementation (Main Program):**
+
+```cpp
+#include <iostream>
+#include <vector>
+#include <algorithm>
+
+using namespace std;
+
+int main() {
+    // Optimize I/O operations for speed
+    ios_base::sync_with_stdio(false); 
+    cin.tie(NULL);
+
+    long long R, C;
+    int K;
+    
+    if (!(cin >> R >> C >> K)) return 0;
+
+    // Store the linear indices of favorite chocolates
+    vector<long long> targets;
+    targets.reserve(K);
+
+    for(int i = 0; i < K; i++) {
+        long long r, c;
+        cin >> r >> c;
+        // Convert (row, col) to 0-based linear index
+        // Index = (r-1) * C + (c-1)
+        long long idx = (r - 1) * C + (c - 1);
+        targets.push_back(idx);
+    }
+
+    // Sort targets to allow binary search
+    sort(targets.begin(), targets.end());
+
+    int Q;
+    cin >> Q;
+    while(Q--) {
+        long long start_r, start_c;
+        cin >> start_r >> start_c;
+        long long start_idx = (start_r - 1) * C + (start_c - 1);
+
+        // Find the first target index that is >= start_idx
+        auto it = lower_bound(targets.begin(), targets.end(), start_idx);
+
+        if (it != targets.end()) {
+            // Found a target ahead in the linear sequence without wrapping
+            // Number of steps = target_idx - start_idx + 1
+            // Wait, the problem asks for "how many MORE days". 
+            // Example 1: Start (1,1), Target (1,1) -> Ans 0?
+            // Re-reading: "If start is favorite, ans 0".
+            // Example 5 explanation: Start (1,2), Target (1,3) is next -> Ans 1.
+            // So simply distance: target - start.
+            cout << (*it - start_idx) << "\n";
+        } else {
+            // No target >= start_idx, must wrap around to the first target in the list
+            // Distance = (Total Cells - start_idx) + first_target_idx
+            // effectively wrapping around.
+            long long total_cells = R * C;
+            cout << (total_cells - start_idx + targets[0]) << "\n";
+        }
+    }
+
+    return 0;
+}
+```
+
+### Summary of Solutions 3, 4
+
+3.  **Chocolate Truffle:** A greedy/binary search approach. Linearize the 2D grid into 1D indices. Sort the favorite locations. For each start point, use `lower_bound` to find the nearest future target. If not found, wrap around to the first target. Complexity $O(K \log K + Q \log K)$.
+4.  **Queue Block Insert:** A standard array insertion logic adapted for circular buffers. Expand capacity, shift elements from the back to create a hole, fill the hole, update size. Uses modular arithmetic for all array accesses. Complexity $O(N + m)$.
