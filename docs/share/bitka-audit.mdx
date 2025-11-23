@@ -1,0 +1,355 @@
+---
+sidebar_position: 4
+---
+
+# IT Audit in Bitka Project
+
+## Overview
+
+- BitKa project is **excellent** for someone targeting an **IT Audit internship**.
+Fintech + security + data flows + compliance = very strong resume material.
+Below is a complete plan: what they can do, what they need to learn, example deliverables, and sample resume bullets.
+
+---
+
+### 1. Why this project is good for an IT audit intern
+
+An IT audit intern’s job is typically to evaluate:
+
+* **Internal controls** (access, authentication, authorization, change management)
+* **Data security** (encryption, key rotation, backups)
+* **Process compliance** (KYC, AML, logging, monitoring)
+* **System reliability** (incident response, DR, business continuity)
+* **Regulatory compliance** (GDPR, ISO 27001, SOC 2, PCI-DSS depending on company)
+
+BitKa is a mini-crypto-bank/exchange project → this is exactly the domain where those skills apply.
+
+Even if the product is small or not complete, the intern can still perform **audit documentation, control testing, risk assessment, and compliance mapping**.
+
+---
+
+### 2. What they can do in this project (concrete tasks)
+
+#### **A. Document the System: Data Flow Diagrams + Control Points**
+
+* Identify how user data moves (signup → auth → KYC → wallet → deposit/withdraw).
+* Identify key control points: authentication, authorization, rate limits, logging, wallet signing, API roles, service-to-service trust.
+
+**Deliverables:**
+
+* Level 0–2 Data Flow Diagrams (DFD)
+* Inventory of all personal data fields and storage locations
+* Risk assessment for each stage (STRIDE or similar)
+
+---
+
+#### **B. Create an IT General Controls (ITGC) assessment**
+
+Set of internal controls such as:
+
+* RBAC for backend and cloud
+* Password policy
+* Logging & monitoring
+* Backup/restore testing
+* Change management (GitHub PR flow)
+* Secure deployment (CI/CD)
+
+**Deliverable:**
+
+* ITGC checklist
+* Gap analysis (What is missing, what needs improvement)
+
+---
+
+#### **C. Perform Security Configuration Audit**
+
+Examples:
+
+* Review backend services for:
+
+  * JWT config
+  * Key rotation
+  * Password hashing
+  * TLS enforcement
+* Review infrastructure:
+
+  * Docker security
+  * Traefik HTTPS config
+  * Database roles (least privilege)
+
+**Deliverable:** Findings report + remediation recommendations.
+
+---
+
+#### **D. Privacy & Compliance Gap Mapping**
+
+Map the BitKa system against:
+
+* **ISO 27001 Annex A controls**
+* **PDPA (Thai data protection law)**
+* **GDPR (high-level mapping)**
+* **SOC 2 criteria**
+  This is GREAT on resume.
+
+**Deliverable:**
+“BitKa vs ISO 27001 control matrix”
+“BitKa PDPA compliance gap report”
+
+---
+
+#### **E. Audit Logs Review + Improvement Plan**
+
+* Evaluate completeness of logs:
+
+  * authentication attempts
+  * KYC status changes
+  * deposit/withdraw events
+  * admin actions
+* Recommend log retention & separation of duties
+* Design secure log pipeline (e.g., Loki → S3 backup)
+
+**Deliverable:** Audit logging scope document + recommended schema.
+
+---
+
+#### **F. Risk Assessment of Wallet & Transaction Flows**
+
+Even if trading is not finished:
+
+* Document risks in deposit/withdraw
+* Evaluate fraud prevention controls
+* Recommend improvements (limits, approval workflow, anomaly detection)
+
+**Deliverable:** Crypto wallet risk assessment document.
+
+---
+
+### 3. Skills they need to learn (very realistic for internship level)
+
+#### **Technical + Audit Basics**
+
+✔ Understanding microservice architecture
+✔ Understanding authentication / authorization / RBAC
+✔ JWT, OAuth2, key rotation
+✔ Basic Python or SQL (for log sampling)
+✔ Understanding Kafka-level message flows (optional but great)
+
+#### **Audit Frameworks**
+
+✔ ISO 27001 (most important to learn)
+✔ SOC 2 (security, availability, confidentiality)
+✔ PDPA (Thai law — like GDPR lite)
+✔ PCI-DSS (if dealing with card-like flows; optional)
+
+#### **Security Concepts**
+
+✔ CIA triad (Confidentiality, Integrity, Availability)
+✔ OWASP Top 10
+✔ STRIDE threat modeling
+
+#### **Documentation & Reporting**
+
+✔ Writing findings
+✔ Making control matrices
+✔ Gap analysis
+✔ Risk scoring (impact × likelihood)
+
+---
+
+### 4. Example tasks + outputs that fit on resume
+
+#### **Task:** Document all data flows and identify personal data categories.
+
+**Output:** DFD diagrams, data inventory table.
+
+#### **Task:** Review backend services for access control and secure config.
+
+**Output:** ITGC report, key risks, recommended improvements.
+
+#### **Task:** Log auditing and completeness validation.
+
+**Output:** Audit log schema recommendations + retention policy.
+
+#### **Task:** Compliance mapping.
+
+**Output:** ISO 27001 Annex A mapping with gap analysis.
+
+#### **Task:** Risk assessment of deposit/withdraw process.
+
+**Output:** Findings + mitigation plan.
+
+#### **Task:** Review DR/backup procedure.
+
+**Output:** Backup/restore checklist + testing documentation.
+
+---
+
+### 5. Example resume bullets (copy-paste ready)
+
+#### **General IT Audit Resume Bullets**
+
+* “Performed IT General Controls (ITGC) assessment for BitKa microservices, covering access control, change management, backup/restore, and logging.”
+* “Developed data flow diagrams and security boundary maps for authentication, KYC, and wallet services.”
+* “Conducted ISO 27001 and SOC 2 gap analysis, identifying missing controls and proposing remediation steps.”
+* “Reviewed JWT authentication, RBAC, and key management, providing recommendations for secure configuration and rotation.”
+* “Assessed audit log completeness across services (auth, KYC, wallet) and implemented standardized log schema and retention policy.”
+* “Performed risk assessment on deposit/withdraw flows, identifying fraud and operational risks with actionable mitigation plan.”
+* “Documented BitKa’s PDPA/GDPR data handling processes and created data classification + privacy risk report.”
+
+#### **Security-focused bullets**
+
+* “Performed threat modeling of service-to-service communication using STRIDE methodology.”
+* “Evaluated S3, PostgreSQL, and Docker host configurations for security best practices and least-privilege.”
+
+#### **Governance / Compliance bullets**
+
+* “Created ISO 27001 Annex A control matrix aligned to project architecture.”
+* “Assisted in defining incident response, DR, and business continuity documentation.”
+
+---
+
+### 6. What “compliance” means in job descriptions for IT Audit
+
+Most internship listings include terms like:
+
+#### ✔ ISO 27001
+
+Information security management system — the most common framework companies use.
+
+#### ✔ SOC 2
+
+Auditors check controls for Security, Availability, Confidentiality. (Very common for tech startups.)
+
+#### ✔ GDPR / PDPA
+
+Data protection legislation. PDPA is Thailand’s. GDPR is EU’s.
+Key areas: consent, data retention, right to access/erase, data minimization.
+
+#### ✔ PCI-DSS (only if dealing with payments)
+
+If this project expands to fiat payments, mention awareness but not necessary for crypto-only.
+
+#### ✔ ITGC
+
+Access control, change management, backups, operations.
+
+#### ✔ OWASP / cybersecurity best practices
+
+Many listings ask for this.
+
+#### ✔ Risk Assessment frameworks
+
+ISO 31000 or simple impact × likelihood matrix.
+
+## Practical Plan
+
+Here’s a tight, realistic plan and a ready-to-post Thai job listing tailored for a single **IT Audit internship** on the BitKa project. I designed work so a motivated student who has classes **9:00–16:00 during the first two weeks** can still finish useful, résumé-ready work in **3 weeks** (evenings + weekends). I include:
+
+1. **What they must learn (short & prioritized)**
+2. **Concrete 3-week plan** with time estimates and weekly deliverables
+3. **Measurable tasks / accepted outputs** (what you’ll review)
+4. **Sample resume bullets** they can add after finishing
+5. **Thai job post** (preserve English terms like JWT, OAuth2, ISO 27001, PDPA, Postgres, Kafka)
+
+Keep this as the hiring/assignment post — it’s concise and realistic.
+
+---
+
+### 1) What they must learn (priority order — focused, not exhaustive)
+
+These are the minimum skills they should pick up quickly. Learning resources can be short docs, 1–2 videos, and reading your project README.
+
+**Technical / Security basics**
+
+* **Microservice basics** (what service boundaries are: auth, kyc, ledger, deposit, withdraw) — 2–3 hours
+* **Authentication fundamentals**: JWT (RS256), OAuth2 password + refresh flow — 3–4 hours
+* **Logging & audit trails**: what to log (auth, kyc changes, deposit/withdraw events), retention basics — 2 hours
+* **Postgres basics + simple SQL** (selects, basic joins, counts) — 3–4 hours
+* **Threat modelling basics (STRIDE)** and **IT general controls (ITGC)** concepts — 3 hours
+
+**Compliance & frameworks (high-level)**
+
+* **ISO 27001 (Annex A overview)** — 2 hours (high-level mapping)
+* **PDPA / GDPR (privacy basics)** — 2 hours
+* **SOC 2 basics** (Security & Availability focus) — 1.5 hours
+
+**Optional / helpful**
+
+* Basic familiarity with **Kafka**, **Grafana/Prometheus**, **S3/R2** — 1–2 hours each (only if time)
+
+*Total focused study: ~20–25 hours spread across the whole 3 weeks.*
+
+---
+
+### 2) 3-Week plan (realistic schedule given classes 9–16 in Week1–2)
+
+Assumption: Candidate can work **weekday evenings (2–3 hours)** and **weekends (4–6 hours)** in weeks 1–2, and **more time in week 3**. I give estimated hours.
+
+#### Week 0 — Quick onboarding (before starting) — **1–2 hours**
+
+* Read project README & architecture diagrams (C4).
+* Access repo & run local services minimal (auth + wallet) OR review recorded demo.
+
+#### Week 1 (evenings + weekend) — **~12–15 hours**
+
+Goal: Learn core concepts & produce the **Data Flow Diagram (DFD)** + Data Inventory.
+
+* Study: JWT/OAuth2 basics, microservices map, logging basics, Postgres query primer. (6–8 h)
+* Deliverable 1: **System Data Flow Diagram** (level 1) showing where PII flows (auth → kyc → ledger → deposit) + brief text summary (~1 page). (2–3 h)
+* Deliverable 2: **Data Inventory Table** listing personal data fields, storage location (which service/schema), retention suggestion. (2–3 h)
+
+#### Week 2 (evenings + weekend) — **~12–15 hours**
+
+Goal: Audit controls for auth, KYC, backup & logging. Create ITGC checklist.
+
+* Study: ISO 27001 Annex A mapping + PDPA basics + STRIDE quick read (3–4 h)
+* Task: Inspect code/config (auth-service & k8s/infra README) and verify presence/absence of controls (JWT key management, keystore, HTTPS, backups, DB roles). (3–4 h)
+* Deliverable 3: **ITGC checklist (service-focused)** — access controls, key management, logging & retention, backups, change management, deploy pipeline checks. Mark each control: Present / Partial / Missing + remediation note. (3–4 h)
+* Deliverable 4: **Quick log review**: sample 10–20 logs (or simulated log entries) and short report: “Which events are logged? Missing audit events?” (2–3 h)
+
+#### Week 3 (more focused, ~25–30 hours)
+
+Goal: Reconciliation & final report + presentation and resume-ready artifacts.
+
+* Task: **Reconciliation test** (small): choose deposits or refresh tokens — run SQL queries to compare ledger vs deposit events (or tokens table vs auth records). Produce discrepancy report and one automation SQL / script for a daily reconciliation check. (8–10 h)
+* Task: **Risk assessment** for deposit/withdraw flows: list top 5 risks, likelihood/impact, and mitigations. (4–6 h)
+* Deliverable 5: **Final Audit Report (4–6 pages)** combining DFD, ITGC matrix, log gaps, reconciliation results, risk assessment, and prioritized remediation (short roadmap). (6–8 h)
+* Final: 30–45 minute demo for the team + handover (slides + 1-page summary for resume). (2–3 h)
+
+---
+
+### 3) Measurable tasks / accepted outputs (what you will review)
+
+Each deliverable should be short and actionable — reviewers should be able to read in 10 minutes.
+
+1. **DFD diagram (PNG or draw.io) + 1-paragraph explanation** — shows data flow and trust boundaries.
+2. **Data Inventory spreadsheet (CSV/Google Sheet)** — columns: field, PII? (Y/N), stored in (service/schema), retention suggested, access roles.
+3. **ITGC checklist (table)** — control, location, status (Present/Partial/Missing), remediation (one-line).
+4. **Log sample report (1 page)** — example logs checked, missing events, recommended log entries (e.g., "auth:login_failed", "kyc:status_changed", "withdraw:approval").
+5. **Reconciliation SQL/script** — minimal reproducible query or Python script that compares two tables and outputs mismatch rows.
+6. **Risk assessment & prioritized remediation list** — top 5 risks with mitigation & quick wins.
+7. **Final Audit Report & 10-slide summary deck** — concise, with “what to fix in 30/60/90 days.”
+
+If they deliver all of the above reasonably, consider it a success.
+
+---
+
+### 4) Sample resume bullets (after finishing this 3-week assignment)
+
+Pick 2–3 bullets that match their contributions:
+
+* “Performed ITGC assessment for BitKa microservices (Auth/KYC/Deposit) and produced remediation roadmap aligned to ISO 27001 and PDPA.”
+* “Created Data Flow Diagram and data inventory for user PII, identifying 6 critical logging gaps and recommending fixes implemented by dev team.”
+* “Built daily reconciliation check (SQL) for deposit crediting that detected and documented discrepancies between ledger and on-chain events.”
+* “Produced risk assessment for deposit/withdraw flows and prioritized 30/60/90 remediation items to reduce operational & fraud risk.”
+* “Implemented standardized audit-log schema and performed sample log audits for authentication and KYC workflows.”
+
+---
+
+### 5) Skills / learning outcomes they can claim after the internship
+
+* Understand microservice security controls and OAuth2/JWT implementation.
+* Can create DFDs, ITGC checklists and map system to ISO 27001/PDPA.
+* Able to write basic SQL for reconciliation & log sampling.
+* Performed practical risk assessment and suggested remediation prioritized by impact.
+* Produced audit-ready documentation and presented findings to engineering.

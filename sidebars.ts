@@ -42,7 +42,7 @@ const sidebars: SidebarsConfig = {
     {
       type: "category",
       label: "Shared Resources",
-      items: ["share/data-in-dgb", "share/cybersec-in-dgb", "share/jwt"],
+      items: ["share/data-in-dgb", "share/cybersec-in-dgb", "share/jwt", "share/bitka-audit"],
     },
     {
       type: "category",
