@@ -1,0 +1,209 @@
+---
+sidebar_position: 5
+---
+
+# Task Idea for Data Team
+
+Yes — absolutely. You can give the data team plenty of meaningful, resume-worthy work that **does not require the trading feature**. Below I list practical project ideas, ordered by priority (high → low), what data to ask backend/mobile to emit so those projects are possible, short implementation hints (tech stack + approach), and neat resume bullets you can copy. These are chosen so a small data team or a single intern can complete parts within a few weeks and show measurable results.
+
+---
+
+## Quick summary (one line)
+
+Focus on **user / product / infra / money-flow** signals that already exist or are easy to add: auth, KYC, deposits, withdrawals, internal transfers, notifications, app events, and infrastructure logs. Those enable analytics, fraud detection, onboarding optimization, retention analysis, and reconciliation — all valuable on a resume.
+
+---
+
+## Priority A — high impact, low dependency (do first)
+
+1. **User activity & funnel analytics (onboarding → KYC → deposit)**
+
+* **Why:** Shows product understanding and drives UX improvements without trading.
+* **What to build:** event pipeline → Postgres; dashboards (DAU, activation funnel, conversion rates).
+* **Data to collect (backend/mobile):**
+
+  * `user_id`, `event_name` (e.g., signup, verify_email, kyc_start, kyc_submit, deposit_request), `timestamp`, `platform`, `app_version`, `device_type`, `source` (referrer).
+* **Implementation hints:** Kafka or simple POST `/events` endpoint → store raw events table → materialized view for funnel; Grafana/Metabase dashboard.
+* **Resume bullets:**
+
+  * “Built user event pipeline and dashboards for onboarding funnel; increased KYC completion visibility and reduced drop-off by identifying top friction points.”
+
+---
+
+2. **KYC pipeline & approval analytics**
+
+* **Why:** Core to any financial product; easy to collect (no files). Good for compliance demos.
+* **What to build:** submission storage, status transitions, admin review logs, approval time metrics.
+* **Data to collect:**
+
+  * `user_id`, `kyc_form` (json), `submitted_at`, `status` (pending/approved/rejected), `reviewer_id`, `reviewed_at`, `reject_reasons`.
+* **Implementation hints:** KYC service writes to `kyc_submissions` table + emits `kyc.approved` events; data team analyzes approval time, rejection reasons.
+* **Resume bullets:**
+
+  * “Implemented KYC analytics to report average approval time and most common rejection reasons, enabling product improvements.”
+
+---
+
+3. **Deposit & Withdrawal analytics + reconciliation**
+
+* **Why:** Money flow is critical; even without trading you can show deposits/withdrawals and reconcile with blockchain events.
+* **What to build:** track deposit addresses, incoming confirmations, crediting to ledger, withdrawal requests & outcomes, reconciliation reports.
+* **Data to collect:**
+
+  * `deposit_id`, `user_id`, `address`, `txid`, `amount`, `currency`, `confirmations`, `detected_at`, `credited_at`, `withdrawal_id`, `to_address`, `status`, `broadcast_txid`, `fee`.
+* **Implementation hints:** Consumer from deposit/wallet events → staging table → reconcile: compare blockchain-reported credits vs ledger balances → daily reconciliation job.
+* **Resume bullets:**
+
+  * “Built deposit/withdraw analytics and automated reconciliation reports detecting discrepancies between on-chain events and ledger entries.”
+
+---
+
+4. **Fraud & anomaly detection (basic rules + ML features)**
+
+* **Why:** Directly relevant to fintech; great resume value even with simple rules.
+* **What to build:** Real-time rule engine + offline ML features (e.g., unusual withdrawal size, impossible travel).
+* **Data to collect:**
+
+  * `user_id`, `ip_address`, `device_id`, `geo_country`, `event_name` (login/withdraw), `amount`, `timestamp`, `kyc_level`.
+* **Implementation hints:** Start with rules (e.g., >3 failed logins, withdrawal > X*avg), produce alerts; build feature store (rolling counts by day) and simple classifier (scikit-learn) as PoC.
+* **Resume bullets:**
+
+  * “Implemented fraud detection rules and feature extraction pipeline; POC classifier prioritized alerts for manual review.”
+
+---
+
+## Priority B — useful & doable (next)
+
+5. **Retention & cohort analysis**
+
+* **Why:** Product metric that’s easy to compute from events.
+* **Data needed:** same `user_id` + `event_name` + `timestamp` + `signup_date`.
+* **Implementation hints:** SQL cohorts, visualize churn & retention curves; suggest experiments.
+* **Resume bullets:**
+
+  * “Performed cohort analysis and provided actionable recommendations to improve 7-day retention.”
+
+6. **Notifications effectiveness A/B**
+
+* **Why:** Evaluate emails/pushes; backend only needs to tag notifications.
+* **Data to collect:**
+
+  * `notification_id`, `user_id`, `channel` (email/push/in-app), `template`, `sent_at`, `delivered_at`, `opened_at`, `action_taken`.
+* **Implementation hints:** Capture events and evaluate open/click rates per template; simple A/B test analysis.
+* **Resume bullets:**
+
+  * “Built notification analytics and A/B testing framework to measure email open-to-action conversion.”
+
+7. **Balance snapshots & history**
+
+* **Why:** Without trading, you still have balances from deposits/withdrawals/internal transfers.
+* **Data to collect:** periodic snapshot: `user_id, currency, balance, ts`
+* **Implementation hints:** nightly snapshot job -> enable trend metrics and daily PnL approximations.
+* **Resume bullets:**
+
+  * “Implemented daily balance snapshot pipeline for user portfolio tracking and historical reporting.”
+
+---
+
+## Priority C — advanced/optional (stretch)
+
+8. **Feature store & ML-ready datasets**
+
+* **Why:** Prepares for future ML work (fraud models, churn prediction).
+* **Data to collect:** aggregate features per user: `daily_tx_count`, `avg_deposit_amount`, `failed_login_count`, `kyc_age`, etc.
+* **Implementation hints:** Build feature table updated daily; store in Postgres or parquet on S3; expose for DS notebooks.
+* **Resume bullets:**
+
+  * “Designed feature store and ETL for ML experiments (fraud detection / churn prediction).”
+
+9. **Synthetic / demo datasets & dashboards**
+
+* **Why:** If real data is small, create realistic synthetic events for dashboards and ML training.
+* **Implementation hints:** Python script to generate realistic user flows, deposits, enroll KYC, etc.
+
+10. **Infra & observability analytics**
+
+* **Why:** Operations-focused, great for SRE/data roles.
+* **Data to collect:** app logs, latency, errors; endpoints: `request_id`, `path`, `status`, `latency_ms`, `node_id`.
+* **Implementation hints:** collect into Elastic/Grafana Loki, build SLO dashboards and error rate alerts.
+* **Resume bullets:**
+
+  * “Built observability dashboards and SLO alerts to monitor API stability.”
+
+---
+
+## Concrete fields to add (copy/paste list)
+
+Add these to the backend/mobile events & transactional payloads so data team can work without trading:
+
+User / Auth:
+
+* `user_id`, `created_at`, `signup_source`, `device_id`, `app_version`, `country`, `last_login_at`, `ip_address`, `user_agent`
+
+Events:
+
+* `event_name`, `event_ts`, `platform`, `screen`, `metadata` (json)
+
+KYC:
+
+* `kyc_submission_id`, `submitted_at`, `status`, `reviewed_at`, `reviewer_id`, `reject_reasons`
+
+Deposit/Withdraw:
+
+* `deposit_id`, `txid`, `address`, `memo`, `currency`, `amount`, `detected_at`, `confirmed_at`, `credited_at`
+* `withdrawal_id`, `requested_at`, `approved_at`, `broadcast_at`, `txid`, `status`, `fee`
+
+Internal transfers / balances:
+
+* `transfer_id`, `from_user_id`, `to_user_id`, `amount`, `currency`, `created_at`, `settled_at`
+
+Notifications:
+
+* `notification_id`, `user_id`, `channel`, `template_id`, `sent_at`, `delivered_at`, `opened_at`, `action_ts`, `action_type`
+
+Security:
+
+* `ip_address`, `device_fingerprint`, `login_result` (success/fail), `fail_reason`
+
+Operational:
+
+* `request_id`, `endpoint`, `status_code`, `latency_ms`, `node`, `timestamp`
+
+---
+
+## Minimal infra & stack suggestions (small team)
+
+* **Event ingestion:** POST `/events` endpoint or Kafka (if you already use Kafka). For internship level, POST + Postgres is fine.
+* **Storage:** Postgres (single DB) + daily partitions/materialized views for analytics — no need ClickHouse unless scale grows.
+* **Processing:** Python (Pandas, scikit-learn) notebooks + small Airflow/cron jobs for nightly ETL.
+* **Dashboard:** Metabase / Grafana for SQL dashboards.
+* **Model serving (optional):** Jupyter prototype → Flask/FastAPI endpoint if required.
+
+---
+
+## Deliverables the data team can ship (good for resume)
+
+* Event ingestion pipeline + schema design (documented)
+* 3 dashboards: onboarding funnel, deposit/withdraw overview, fraud alerts
+* One automated reconciliation report between blockchain events and ledger
+* One ML PoC (e.g., suspicious withdrawal classifier or churn model) with a simple evaluation metric
+* A README / data dictionary describing all events & schemas
+
+Sample resume bullets (pick 1–3):
+
+* “Built event ingestion and analytics pipelines for BitKa (auth/KYC/deposits), producing dashboards and automated reconciliation reports used by operations.”
+* “Implemented fraud detection features and a PoC model to prioritize suspicious withdrawals, reducing manual review time.”
+* “Designed and implemented onboarding funnel analytics, identifying top drop-off steps and enabling product changes.”
+
+---
+
+## Final note — roadmap for 3.5 weeks (very compact plan)
+
+If the team has limited time, prioritize:
+
+1. Instrument events (auth, KYC, deposit/withdraw, notifications).
+2. Build event ingestion + raw events table.
+3. Create 2–3 dashboards (onboarding funnel, deposits, suspicious withdrawals).
+4. Add one ML PoC or one reconciliation automation.
+
+This yields tangible dashboards + one technical ML/data artifact — perfect for an internship portfolio.
