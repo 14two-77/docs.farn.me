@@ -42,7 +42,34 @@ const sidebars: SidebarsConfig = {
     {
       type: "category",
       label: "Shared Resources",
-      items: ["share/data-in-dgb", "share/cybersec-in-dgb", "share/jwt", "share/bitka-data","share/bitka-audit"],
+      items: [
+        {
+          type: "category",
+          label: "BitKa",
+          items: [
+            {
+              type: "category",
+              label: "Guide",
+              items: [
+                "share/bitka/guide/project-structure",
+                "share/bitka/guide/jwt",
+                "share/bitka/guide/read-go-docs",
+                "share/bitka/guide/logging",
+              ],
+            },
+            {
+              type: "category",
+              label: "Role",
+              items: [
+                "share/bitka/role/data-in-dgb",
+                "share/bitka/role/cybersec-in-dgb",
+                "share/bitka/role/bitka-data",
+                "share/bitka/role/bitka-audit",
+              ],
+            },
+          ],
+        },
+      ],
     },
     {
       type: "category",

@@ -1,0 +1,81 @@
+---
+sidebar_position: 3
+---
+
+# How to read Golang package document
+
+This is a great skill to learn. The `lestrrat-go/jwx` library is powerful, but it is also known for having a very "granular" API that changes significantly between major versions (v2 to v3).
+
+When you hit a "breaking change" or a missing function like `jws.WithKeyID`, here is the exact workflow I use to find the solution.
+
+### 1. The "GoDoc" Detective Work
+
+The first place to look is always [pkg.go.dev](https://pkg.go.dev).
+
+1.  **Go to the package page:** [pkg.go.dev/github.com/lestrrat-go/jwx/v3/jwt](https://pkg.go.dev/github.com/lestrrat-go/jwx/v3/jwt)
+2.  **Look at the Function Signature:**
+    I searched for `Sign`. The signature is:
+    ```go
+    func Sign(t Token, alg jwa.KeyAlgorithm, key interface{}, options ...SignOption) ([]byte, error)
+    ```
+3.  **Drill down into the "Options":**
+    I clicked on `SignOption` to see what functions generate it.
+    *   I saw `WithKey`.
+    *   I *didn't* see `WithKeyID` anymore (it used to be there in v2).
+4.  **Look for "Headers":**
+    Since `kid` (Key ID) is a **Header** parameter in the JWT spec, I searched the page for "Header".
+    *   I found `jws.WithProtectedHeaders(Headers)`.
+
+**Conclusion from Docs:** "Okay, there is no direct helper for KeyID anymore. I probably need to create a `Headers` object, set the KeyID manually, and pass it using `WithProtectedHeaders`."
+
+### 2. The "GitHub Search" (The most effective method)
+
+Documentation can be outdated, but the code cannot lie.
+
+1.  **Go to the Repo:** [github.com/lestrrat-go/jwx](https://github.com/lestrrat-go/jwx)
+2.  **Press `t` (File Finder) or go to the search bar.**
+3.  **Search for the thing you want to do:**
+    I searched for `"kid"` or `KeyID` inside the `v3` folder.
+4.  **Look at `*_test.go` files:**
+    Library authors *must* test their code. The test files are often better documentation than the README.
+    *   I looked at `jwt/jwt_test.go` or `jws/jws_test.go`.
+    *   I searched inside the file for `jwt.Sign`.
+
+    **What I would find in the source code:**
+    ```go
+    // Inside one of their tests
+    headers := jws.NewHeaders()
+    headers.Set(jws.KeyIDKey, "my-key-id")
+    signed, _ := jwt.Sign(token, jwt.WithKey(alg, key, jws.WithProtectedHeaders(headers)))
+    ```
+    *BINGO.* That is exactly the code snippet we needed.
+
+### 3. Using your IDE (GoLand / VS Code)
+
+This is how I found the error `undefined: jws.WithKeyID` quickly without even going to the web.
+
+1.  **Write the code you *think* should work:**
+    ```go
+    jwt.Sign(..., jws.WithKeyID("..."))
+    ```
+2.  **It turns red.**
+3.  **Right-click on `jws` (the package name) -> "Go to Definition".**
+    This opens the actual source code file of the library installed on your machine.
+4.  **Look at the exported functions:**
+    I scrolled through the file (or the file structure sidebar). I saw `WithProtectedHeaders`, `WithType`, `WithContentType`... but `WithKeyID` was missing.
+5.  **Check the `Headers` interface:**
+    I saw `NewHeaders()` and `Set(name, value)`. This confirmed the new pattern: create object -> set value -> pass object.
+
+### 4. Checking "Changes" or "Releases"
+
+For major version upgrades (like v2 to v3), libraries usually have a `CHANGELOG.md` or `Changes` file.
+
+*   In `jwx`, they explicitly mention that they moved to a more generic Header system to reduce the number of "helper functions" cluttering the API.
+
+### Summary: The "Algorithm" to solve any library issue
+
+1.  **Guess the name:** Type `package.With...` and let Intellisense show you the list.
+2.  **Check the Parent:** If `kid` is a Header, look for `WithHeader` or `WithProtectedHeaders`.
+3.  **Check the Source (Tests):** Go to GitHub, open the `_test.go` file for that package, and search for the function you are calling (`Sign`). Copy how they do it.
+
+In the case of `jwx`, it is a very strictly "Correct" library. It forces you to understand that `kid` is part of the `Protected Headers` of a `JWS` structure that wraps a `JWT`. Once you understand that hierarchy, the API change makes sense!

@@ -1,0 +1,330 @@
+---
+sidebar_position: 4
+---
+
+# Logging guidelines
+
+This is a crucial step for production readiness. You want **Structured Logging** (JSON) so machines (Datadog, ELK Stack, Loki) can read it, but you want to keep the API response clean for the frontend.
+
+Here is the complete solution:
+1.  **Log Design:** A standard schema for Bitka Exchange.
+2.  **Infrastructure:** Updated `pkg/logger` and a new **Trace Middleware**.
+3.  **Implementation:** Updated `auth.go` middleware to log the *real* error internally but send a *generic* error to the user.
+
+---
+
+### Part 1: Bitka Exchange Log Design
+
+For a crypto exchange microservice system, your logs need to answer: **Who, What, Where, When, and How Long.**
+
+We will use **Zerolog** to enforce this JSON structure:
+
+**The Schema:**
+```json
+{
+  "time": "2023-11-23T10:30:00Z",
+  "level": "info",
+  "service": "bitka-auth",       // Which microservice?
+  "env": "production",           // Dev or Prod?
+  "trace_id": "abc-123-xyz",     // Correlation ID (Critical for tracing across services)
+  "user_id": "u-999",            // Contextual User (if logged in)
+  "http": {                      // HTTP Metadata
+    "method": "POST",
+    "path": "/api/v1/login",
+    "status": 200,
+    "latency_ms": 45,
+    "ip": "192.168.1.50"
+  },
+  "msg": "User logged in successfully" // Human readable message
+}
+```
+
+---
+
+### Part 2: Upgrade Shared Packages
+
+#### 1. Better Logger Setup (`pkg/logger/zerolog.go`)
+
+We update this to support the "Service Name" field and handle the difference between Dev (Pretty) and Prod (JSON).
+
+```go
+package logger
+
+import (
+	"os"
+	"time"
+
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
+)
+
+// Config holds logger settings
+type Config struct {
+	ServiceName string
+	Environment string // "development" or "production"
+}
+
+func Init(cfg Config) {
+	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
+
+	// Default to JSON (Production)
+	logger := zerolog.New(os.Stderr).With().
+		Timestamp().
+		Str("service", cfg.ServiceName).
+		Str("env", cfg.Environment).
+		Logger()
+
+	// If Development, make it pretty
+	if cfg.Environment == "development" {
+		output := zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339}
+		output.FormatLevel = func(i interface{}) string {
+			return strings.ToUpper(fmt.Sprintf("| %-6s|", i))
+		}
+		logger = logger.Output(output)
+	}
+
+	// Set the global logger
+	log.Logger = logger
+}
+
+// Imports needed for the pretty printer modification
+import (
+	"fmt"
+	"strings"
+)
+```
+
+#### 2. The Trace Middleware (`pkg/middleware/logger.go`)
+
+This is **new**. It generates a `trace_id` for every request, creates a context-aware logger, and logs the final status code and latency.
+
+```go
+package middleware
+
+import (
+	"time"
+
+	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
+	"github.com/rs/zerolog/log"
+)
+
+func RequestLogger() fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		start := time.Now()
+
+		// 1. Trace ID: Get from header (if upstream set it) or generate new
+		traceID := c.Get("X-Trace-ID")
+		if traceID == "" {
+			traceID = uuid.New().String()
+		}
+		// Send it back to client
+		c.Set("X-Trace-ID", traceID)
+
+		// 2. Create Context Logger
+		// We attach trace_id so EVERY log in Service/Repo has it automatically
+		logger := log.With().Str("trace_id", traceID).Logger()
+		
+		// Attach to Standard Context (for GORM/Service)
+		ctx := logger.WithContext(c.UserContext())
+		c.SetUserContext(ctx)
+
+		// 3. Process Request
+		err := c.Next()
+
+		// 4. Log the Outcome (Access Log)
+		duration := time.Since(start).Milliseconds()
+		
+		event := logger.Info()
+		if err != nil {
+			event = logger.Error().Err(err)
+		}
+
+		event.
+			Str("method", c.Method()).
+			Str("path", c.Path()).
+			Int("status", c.Response().StatusCode()).
+			Str("ip", c.IP()).
+			Int64("latency_ms", duration).
+			Msg("Incoming Request")
+
+		return err
+	}
+}
+```
+
+---
+
+### Part 3: Update Validator and Auth Middleware
+
+Now we fix the specific issue you had: **Internal logging vs External response**.
+
+#### 1. Update Validator (`pkg/token/validator.go`)
+
+We use `log.Ctx(ctx)` to log the specific error details internally.
+
+```go
+package token
+
+import (
+	"context"
+	"fmt"
+	"time"
+
+	"github.com/lestrrat-go/jwx/v3/jwk"
+	"github.com/lestrrat-go/jwx/v3/jwt"
+	"github.com/rs/zerolog/log" // Import Zerolog
+)
+
+// ... NewValidator remains the same ...
+
+func (v *Validator) Validate(ctx context.Context, tokenString string) (jwt.Token, error) {
+	keySet, err := v.cache.Get(ctx, v.url)
+	if err != nil {
+		// Log internal detail
+		log.Ctx(ctx).Error().Err(err).Str("jwks_url", v.url).Msg("Failed to fetch JWKS")
+		return nil, fmt.Errorf("failed to fetch public keys")
+	}
+
+	token, err := jwt.Parse(
+		[]byte(tokenString),
+		jwt.WithKeySet(keySet),
+		jwt.WithValidate(true),
+		jwt.WithAcceptableSkew(1*time.Minute),
+	)
+	if err != nil {
+		// Log the DEEP internal error (e.g., "kid mismatch", "signature invalid")
+		// This is what you see in your terminal
+		log.Ctx(ctx).Warn().Err(err).Msg("Token validation failed internally")
+		
+		// Return the error so the middleware knows it failed
+		return nil, err
+	}
+
+	return token, nil
+}
+```
+
+#### 2. Update Auth Middleware (`pkg/middleware/auth.go`)
+
+This maps the error to a clean JSON response.
+
+```go
+package middleware
+
+import (
+	"strings"
+
+	"bitka-exchange/pkg/response"
+	"bitka-exchange/pkg/token"
+	"github.com/gofiber/fiber/v2"
+	"github.com/rs/zerolog/log"
+)
+
+func Protected(v *token.Validator) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		authHeader := c.Get("Authorization")
+		if authHeader == "" {
+			return response.Error(c, fiber.StatusUnauthorized, "Missing Authorization header")
+		}
+
+		parts := strings.Split(authHeader, " ")
+		if len(parts) != 2 || parts[0] != "Bearer" {
+			return response.Error(c, fiber.StatusUnauthorized, "Invalid Authorization format")
+		}
+		tokenStr := parts[1]
+
+		parsedToken, err := v.Validate(c.UserContext(), tokenStr)
+		if err != nil {
+			// 1. INTERNAL LOG: We already logged deep details in Validator, 
+			// but let's add a high-level warning here with the Trace ID.
+			// (Note: log.Ctx(c.UserContext()) will use the logger with TraceID from RequestLogger)
+			log.Ctx(c.UserContext()).Warn().
+				Err(err).
+				Str("component", "auth_middleware").
+				Msg("Rejecting unauthorized request")
+
+			// 2. EXTERNAL RESPONSE: Generic error for security
+			return response.Error(c, fiber.StatusUnauthorized, "Invalid or expired token")
+		}
+
+		// Add User ID to logger context for future logs
+		logger := log.Ctx(c.UserContext()).With().Str("user_id", parsedToken.Subject()).Logger()
+		c.SetUserContext(logger.WithContext(c.UserContext()))
+
+		c.Locals("user_id", parsedToken.Subject())
+		return c.Next()
+	}
+}
+```
+
+---
+
+### Part 4: Wiring it up
+
+You need to update `main.go` and `app/server.go` in both services to use the new `logger.Init` and the `RequestLogger` middleware.
+
+#### 1. Update `cmd/main.go` (Auth & Account)
+
+```go
+func main() {
+	// Load Config First
+	cfg := config.Load("AUTH_DB_NAME") // or ACCOUNT_DB_NAME
+
+	// Initialize Logger with Config
+	logger.Init(logger.Config{
+		ServiceName: "bitka-auth", // Change to "bitka-account" for account service
+		Environment: cfg.AppEnv,
+	})
+
+	// ... rest is same
+}
+```
+
+#### 2. Update `internal/app/server.go` (Auth & Account)
+
+Add the `middleware.RequestLogger()` **before** any other middleware.
+
+```go
+import (
+    // ...
+    "bitka-exchange/pkg/middleware" // Import the new middleware package
+)
+
+func NewServer(cfg *config.Config) (*fiber.App, error) {
+    // ... DB connection ...
+
+    app := fiber.New(fiber.Config{AppName: "Bitka Service"})
+
+    // 1. RECOVER (Keep server alive)
+    app.Use(recover.New())
+
+    // 2. REQUEST LOGGER (Generates Trace ID & Logs latency)
+    // replaces app.Use(logger.New())
+    app.Use(middleware.RequestLogger()) 
+
+    // ... Routes ...
+    return app, nil
+}
+```
+
+### The Result
+
+Now, when you trigger the error case (e.g., bad signature):
+
+**1. The API Response (What Frontend sees):**
+```json
+{
+  "success": false,
+  "error": "Invalid or expired token"
+}
+```
+
+**2. The Terminal Log (What You see):**
+```text
+| WARN  | time="2023..." service=bitka-account env=dev trace_id=abc-123 msg="Token validation failed internally" error="jws.Verify: signature..."
+| WARN  | time="2023..." service=bitka-account env=dev trace_id=abc-123 component=auth_middleware msg="Rejecting unauthorized request" error="jws.Verify: signature..."
+| INFO  | time="2023..." service=bitka-account env=dev trace_id=abc-123 method=GET path=/api/v1/users/me status=401 latency_ms=2 msg="Incoming Request"
+```
+
+This is the perfect balance: Clean for the user, detailed for the developer.

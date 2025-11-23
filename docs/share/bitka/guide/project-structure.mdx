@@ -1,0 +1,108 @@
+---
+sidebar_position: 1
+---
+
+# Project Structure
+
+This project follows a **Monorepo** architecture using Go Workspaces (`go.work`). It adheres to **Clean Architecture** principles (Three-Layer Architecture) to separate concerns between the database, business logic, and HTTP transport layers.
+
+## Directory Tree
+
+```text
+bitka-exchange/
+├── .env                        # Single source of truth for Environment Variables (Local Dev)
+├── docker-compose.yaml         # Orchestration for DB and Services
+├── go.work                     # Go Workspace file (Links ./pkg, ./services/auth, ./services/account)
+├── Makefile                    # Automation scripts (Run, Test, Docker Build)
+│
+├── pkg/                        # [SHARED MODULE] Library code used by all services
+│   ├── go.mod
+│   ├── config/
+│   │   └── config.go           # Smart Env Loader (Recursively finds .env from root)
+│   ├── database/
+│   │   └── postgres.go         # Standard GORM connection factory
+│   ├── logger/
+│   │   └── zerolog.go          # Structured Logging setup (JSON for Prod, Pretty for Dev)
+│   ├── middleware/
+│   │   ├── logger.go           # Request Tracing (Trace ID & Latency)
+│   │   └── auth.go             # JWT Protection Middleware
+│   ├── response/
+│   │   └── api.go              # Standardized JSON Response wrappers (Success/Error)
+│   └── token/
+│       ├── manager.go          # Token Issuance (Key Rotation, Database persistence, Signing)
+│       ├── model.go            # GORM Model for RSA Keys
+│       └── validator.go        # Token Verification (Remote JWKS fetching & caching)
+│
+└── services/
+    ├── auth/                   # [SERVICE] Authentication Service (Issuer)
+    │   ├── Dockerfile
+    │   ├── go.mod
+    │   ├── cmd/
+    │   │   └── main.go         # Entry point (Initializes Config & Logger)
+    │   └── internal/           # Private code for Auth Service
+    │       ├── app/
+    │       │   └── server.go   # Dependency Injection & Server Wiring (Factory Pattern)
+    │       ├── domain/         # THE CONTRACT (No dependencies on other layers)
+    │       │   ├── user.go     # GORM Model: User
+    │       │   ├── token.go    # GORM Model: RefreshToken
+    │       │   └── interfaces.go # Interfaces for Repo, Usecase, and TokenGen
+    │       ├── repository/     # DATA LAYER
+    │       │   └── postgres.go # Implementation of domain.AuthRepository
+    │       ├── usecase/        # BUSINESS LOGIC LAYER
+    │       │   └── auth_usecase.go # Login, Register, Key Rotation logic
+    │       └── delivery/       # TRANSPORT LAYER
+    │           └── http/
+    │               ├── handler.go  # Fiber Handlers (Parse Request -> Call Usecase -> Send Response)
+    │               ├── route.go    # Route Definitions
+    │               └── dto/        # Data Transfer Objects (Request/Response Structs)
+    │                   ├── login.go
+    │                   └── register.go
+    │
+    └── account/                # [SERVICE] User Profile Service (Resource Server)
+        ├── Dockerfile
+        ├── go.mod
+        ├── cmd/
+        │   └── main.go
+        └── internal/
+            ├── app/
+            │   └── server.go   # Wires up Remote JWT Validator here
+            ├── domain/
+            │   └── profile.go  # GORM Model: Profile (Separate DB from Auth)
+            ├── repository/
+            │   └── postgres.go
+            ├── usecase/
+            │   └── account_usecase.go
+            └── delivery/
+                └── http/
+                    ├── handler.go
+                    └── route.go
+```
+
+## Architectural Layers Explanation
+
+### 1. `pkg/` (The Platform Layer)
+Contains infrastructure code that is **agnostic** to business logic.
+*   **Purpose:** DRY (Don't Repeat Yourself). If we spin up a new service (e.g., `wallet-service`), we just import these packages to get standard logging, database connections, and auth protection immediately.
+
+### 2. `internal/domain/` (The Core)
+Contains the **Entities** (Database Models) and **Interfaces** (Contracts).
+*   **Rule:** This folder **never imports** `repository`, `usecase`, or `delivery`. It is the center of the onion.
+*   **Why:** It prevents circular dependencies and allows us to swap implementations (e.g., swap Postgres for MockDB) without changing the core definitions.
+
+### 3. `internal/repository/` (Data Access)
+Implements the interfaces defined in `domain`.
+*   **Responsibility:** Talk to the database (GORM).
+*   **Rule:** No business logic here. Just "Get Data" and "Save Data".
+
+### 4. `internal/usecase/` (Business Logic)
+Implements the business rules.
+*   **Responsibility:** Orchestrates the flow. Validates passwords, calls the Token Generator, asks Repository to save data.
+*   **Rule:** It knows *what* to do, but not *how* HTTP works or *how* SQL works.
+
+### 5. `internal/delivery/http/` (Transport)
+The entry point for the outside world.
+*   **Responsibility:**
+    1.  Parse JSON Body into DTOs.
+    2.  Validate Input.
+    3.  Call the Usecase.
+    4.  Map the result to a standard JSON Response.
