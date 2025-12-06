@@ -54,7 +54,7 @@ const sidebars: SidebarsConfig = {
                 "share/bitka/guide/project-structure",
                 "share/bitka/guide/jwt",
                 "share/bitka/guide/read-go-docs",
-                "share/bitka/guide/logging",
+                "share/bitka/guide/logging", "share/bitka/guide/kafka-topics",
               ],
             },
             {

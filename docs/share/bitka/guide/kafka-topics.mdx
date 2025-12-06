@@ -1,0 +1,172 @@
+---
+sidebar_position: 5
+---
+
+# KafKa Topic Specs
+
+## 📨 The Standard "Envelope" (Metadata)
+*Every single event* below is wrapped in this structure. This allows the Data Team to sort everything by time and service without looking at the payload.
+
+| Field | Type | Sample Data | Description |
+| :--- | :--- | :--- | :--- |
+| **`event_id`** | UUID | `"550e8400-e29b-..."` | Unique ID for this specific message (Deduplication). |
+| **`correlation_id`**| UUID | `"123e4567-e89b-..."` | Trace ID to follow a request across microservices. |
+| **`timestamp`** | String (ISO8601)| `"2025-12-06T10:00:00Z"`| Exact time the event happened. |
+| **`producer`** | String | `"order-service"` | Name of the service sending the event. |
+| **`data`** | Object | `{ ... }` | The specific payload (See tables below). |
+
+---
+
+## 1. 📈 Domain: Trading
+
+### Event: `trading.orders.created`
+**Producer:** Order Service
+**Trigger:** User successfully places an order (passed validation).
+
+| Field | Type | Sample Data | Description |
+| :--- | :--- | :--- | :--- |
+| `order_id` | UUID | `"a1b2c3d4-..."` | The ID of the new order. |
+| `user_id` | UUID | `"user_999"` | Who placed it. |
+| `symbol` | String | `"BTC_THB"` | The trading pair. |
+| `side` | Enum | `"buy"` | `buy` or `sell`. |
+| `type` | Enum | `"limit"` | `limit` or `market`. |
+| `price` | String (Decimal) | `"3500000.00"` | **String for precision.** "0" if Market Order. |
+| `quantity` | String (Decimal) | `"0.50000000"` | How much they want to buy/sell. |
+| `time_in_force`| Enum | `"GTC"` | `GTC` (Good Till Cancel), `IOC`, `FOK`. |
+
+### Event: `trading.orders.cancelled`
+**Producer:** Order Service
+**Trigger:** User clicks cancel OR System cancels (e.g., IOC order not filled).
+
+| Field | Type | Sample Data | Description |
+| :--- | :--- | :--- | :--- |
+| `order_id` | UUID | `"a1b2c3d4-..."` | ID of the order being killed. |
+| `user_id` | UUID | `"user_999"` | Owner of the order. |
+| `symbol` | String | `"BTC_THB"` | - |
+| `reason` | String | `"user_request"` | `user_request`, `insufficient_balance`, `timeout`. |
+| `remaining_qty`| String | `"0.40000000"` | How much was left unfilled when cancelled. |
+
+### Event: `trading.matches.executed` (The Big One)
+**Producer:** Matching Engine
+**Trigger:** A Buy order overlaps with a Sell order.
+
+| Field | Type | Sample Data | Description |
+| :--- | :--- | :--- | :--- |
+| `match_id` | UUID | `"match_777"` | Unique ID for this trade. |
+| `symbol` | String | `"BTC_THB"` | - |
+| `price` | String | `"3500000.00"` | The final price the trade happened at. |
+| `quantity` | String | `"0.10000000"` | The amount of asset traded. |
+| **`maker_user_id`**| UUID | `"user_A"` | The user who was *waiting* in the book. |
+| `maker_order_id`| UUID | `"ord_111"` | - |
+| `maker_fee` | String | `"1750.00"` | Fee charged to Maker (usually lower). |
+| `maker_fee_asset`| String | `"THB"` | Currency the fee was taken in. |
+| **`taker_user_id`**| UUID | `"user_B"` | The user who *attacked* the book. |
+| `taker_order_id`| UUID | `"ord_222"` | - |
+| `taker_fee` | String | `"0.0001"` | Fee charged to Taker (usually higher). |
+| `taker_fee_asset`| String | `"BTC"` | Currency the fee was taken in. |
+| `taker_side` | Enum | `"buy"` | Did the Taker buy or sell? (Determines Green/Red candle). |
+
+---
+
+## 2. 💰 Domain: Accounting (Ledger)
+
+### Event: `accounting.deposit.confirmed`
+**Producer:** Ledger Service
+**Trigger:** Blockchain scanner confirms inbound transaction.
+
+| Field | Type | Sample Data | Description |
+| :--- | :--- | :--- | :--- |
+| `tx_id` | UUID | `"tx_888"` | Internal system Transaction ID. |
+| `user_id` | UUID | `"user_999"` | Who gets the money. |
+| `asset` | String | `"USDT"` | Symbol of asset. |
+| `amount` | String | `"1000.00"` | Amount credited. |
+| `chain_tx_hash`| String | `"0x123abc..."` | Hash on the real blockchain (Eth/Btc). |
+| `network` | String | `"ERC20"` | Which network was it on? |
+| `confirmations`| Integer | `12` | Number of blocks confirmed. |
+
+### Event: `accounting.withdrawal.requested`
+**Producer:** Ledger Service
+**Trigger:** User asks to withdraw funds.
+
+| Field | Type | Sample Data | Description |
+| :--- | :--- | :--- | :--- |
+| `withdrawal_id`| UUID | `"wd_555"` | Unique ID for this request. |
+| `user_id` | UUID | `"user_999"` | - |
+| `asset` | String | `"ETH"` | - |
+| `amount` | String | `"2.50000000"` | Amount user wants to receive. |
+| `fee` | String | `"0.005"` | Withdrawal fee deducted. |
+| `dest_address` | String | `"0xRecipient..."`| Where they are sending money. |
+
+### Event: `accounting.withdrawal.sent`
+**Producer:** Wallet Service (Signer)
+**Trigger:** Transaction is broadcast to the blockchain.
+
+| Field | Type | Sample Data | Description |
+| :--- | :--- | :--- | :--- |
+| `withdrawal_id`| UUID | `"wd_555"` | Links back to the request. |
+| `chain_tx_hash`| String | `"0x999def..."` | Proof it was sent. |
+| `network_fee` | String | `"0.002"` | Actual Gas/Miner fee paid by the exchange. |
+
+---
+
+## 3. 👤 Domain: Identity
+
+### Event: `identity.user.login`
+**Producer:** Auth Service
+**Trigger:** User logs in.
+
+| Field | Type | Sample Data | Description |
+| :--- | :--- | :--- | :--- |
+| `user_id` | UUID | `"user_999"` | - |
+| `ip_address` | String | `"192.168.1.1"` | IP V4 or V6. |
+| `device_id` | String | `"device_hash"` | Fingerprint of device. |
+| `location_geo` | String | `"Bangkok, TH"` | Approximate city/country. |
+| `status` | Enum | `"success"` | `success`, `failed_pass`, `failed_2fa`. |
+| `user_agent` | String | `"Mozilla/5.0..."`| Browser info. |
+
+### Event: `identity.kyc.updated`
+**Producer:** Account Service
+**Trigger:** Admin approves/rejects documents.
+
+| Field | Type | Sample Data | Description |
+| :--- | :--- | :--- | :--- |
+| `user_id` | UUID | `"user_999"` | - |
+| `old_level` | Integer | `1` | Previous KYC Level. |
+| `new_level` | Integer | `2` | New KYC Level. |
+| `reviewer_id` | UUID | `"admin_01"` | The staff member who reviewed it. |
+| `reason` | String | `"ID expired"` | Optional reason for rejection. |
+
+---
+
+## 4. 📊 Domain: Market Data
+
+### Event: `market.ticker.update`
+**Producer:** Market Data Service
+**Trigger:** Calculated every second from matches.
+
+| Field | Type | Sample Data | Description |
+| :--- | :--- | :--- | :--- |
+| `symbol` | String | `"BTC_THB"` | - |
+| `last_price` | String | `"3500000.00"` | Most recent match price. |
+| `open_24h` | String | `"3400000.00"` | Price 24 hours ago. |
+| `high_24h` | String | `"3550000.00"` | Highest price in last 24h. |
+| `low_24h` | String | `"3350000.00"` | Lowest price in last 24h. |
+| `volume_24h` | String | `"150.5"` | Total Base Asset traded. |
+| `quote_vol_24h`| String | `"520000000"` | Total Quote Asset (Money) traded. |
+
+---
+
+## 5. 🛡️ Domain: System (Audit)
+
+### Event: `system.audit.entry`
+**Producer:** Any Service
+**Trigger:** Sensitive action (Password change, Fee change, API Key creation).
+
+| Field | Type | Sample Data | Description |
+| :--- | :--- | :--- | :--- |
+| `actor_id` | UUID | `"user_999"` | Who did it? (User or Admin). |
+| `action` | String | `"create_api_key"`| What did they do? |
+| `resource` | String | `"api_keys"` | What was modified? |
+| `details_before`| JSON | `{"count": 0}` | State before change (Snapshot). |
+| `details_after` | JSON | `{"count": 1}` | State after change (Snapshot). |
+| `severity` | Enum | `"WARN"` | `INFO`, `WARN`, `CRITICAL`. |
